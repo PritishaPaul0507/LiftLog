@@ -1,0 +1,293 @@
+erDiagram
+    USERS {
+        int id PK
+        string email
+        string password_hash
+        string access_token
+        string refresh_token
+        string full_name
+        string auth_provider
+        datetime created_at
+    }
+
+    EXERCISES {
+        int id PK
+        int user_id FK
+        string name
+        datetime created_at
+    }
+
+    ROUTINES {
+        int id PK
+        int user_id FK
+        string name
+        datetime created_at
+        datetime updated_at
+    }
+
+    ROUTINE_EXERCISES {
+        int id PK
+        int user_id FK
+        int routine_id FK
+        int exercise_id FK
+        int order_index
+        int target_sets
+        datetime created_at
+    }
+
+    WORKOUTS {
+        int id PK
+        int user_id FK
+        int routine_id FK
+        string workout_name
+        datetime started_at
+        datetime finished_at
+        int duration_seconds
+    }
+
+    WORKOUT_EXERCISES {
+        int id PK
+        int user_id FK
+        int workout_id FK
+        int exercise_id FK
+        int order_index
+    }
+
+    WORKOUT_SETS {
+        int id PK
+        int user_id FK
+        int workout_exercise_id FK
+        int set_number
+        float weight
+        int reps
+        datetime created_at
+    }
+
+    USER_PROFILES {
+        int id PK
+        int user_id FK
+        int version
+        string dob
+        string height
+        string weight
+        string sex
+        string wake_time
+        string sleep_time
+        string work_schedule
+        string daily_activity
+        string commute
+        string available_training_time
+        string experience
+        string training_days
+        string preferred_time
+        string preferred_exercises
+        string disliked_exercises
+        string limitations
+        string typical_foods
+        string meals_per_day
+        string eating_out_frequency
+        string favorite_foods
+        string favorite_snacks
+        string dietary_preferences
+        string cooking_constraints
+        string primary_goal
+        string target_weight
+        string goal_description
+        string lifestyle_change_tolerance
+        string current_description
+        string target_description
+        string target_characteristics
+        string inspiration_description
+        datetime created_at
+    }
+
+    GYMS {
+        int id PK
+        string name
+        string about
+        string status
+        string address
+        string city
+        string state
+        string pincode
+        float latitude
+        float longitude
+        string google_maps_url
+        string phone
+        string email
+        string image_url
+        string monday_open
+        string monday_close
+        string tuesday_open
+        string tuesday_close
+        string wednesday_open
+        string wednesday_close
+        string thursday_open
+        string thursday_close
+        string friday_open
+        string friday_close
+        string saturday_open
+        string saturday_close
+        string sunday_open
+        string sunday_close
+        string equipment_json
+        string photos_json
+        int slot_duration_minutes
+        int max_bookings_per_slot
+        datetime created_at
+        datetime updated_at
+    }
+
+    GYM_SLOTS {
+        int id PK
+        int gym_id FK
+        string date
+        string start_time
+        string end_time
+        datetime created_at
+    }
+
+    BOOKINGS {
+        int id PK
+        int user_id FK
+        int gym_id FK
+        int slot_id FK
+        string date
+        string status
+        datetime created_at
+        datetime cancelled_at
+    }
+
+    FOODS {
+        int id PK
+        string name
+        string description
+        string category
+        string brand
+        float calories_per_100g
+        float protein_per_100g
+        float carbs_per_100g
+        float fat_per_100g
+        float fiber_per_100g
+        datetime created_at
+        datetime updated_at
+    }
+
+    FOOD_SERVINGS {
+        int id PK
+        int food_id FK
+        string name
+        float quantity_g
+        datetime created_at
+    }
+
+    CUSTOM_FOODS {
+        int id PK
+        int user_id FK
+        string name
+        string description
+        string category
+        float calories_per_100g
+        float protein_per_100g
+        float carbs_per_100g
+        float fat_per_100g
+        float fiber_per_100g
+        datetime created_at
+        datetime updated_at
+        boolean is_active
+    }
+
+    MEALS {
+        int id PK
+        int user_id FK
+        string name
+        string description
+        datetime created_at
+        datetime updated_at
+        boolean is_active
+    }
+
+    MEAL_ITEMS {
+        int id PK
+        int meal_id FK
+        int food_id FK
+        int custom_food_id FK
+        float quantity_g
+        int serving_id FK
+        datetime created_at
+    }
+
+    DIET_LOGS {
+        int id PK
+        int user_id FK
+        string date
+        float calories
+        float protein_g
+        float carbs_g
+        float fat_g
+        float fiber_g
+        datetime created_at
+        datetime updated_at
+    }
+
+    DIET_LOG_ITEMS {
+        int id PK
+        int log_id FK
+        int user_id FK
+        string meal_type
+        int food_id
+        int custom_food_id
+        int serving_id FK
+        string food_name
+        float quantity_g
+        float calories
+        float protein_g
+        float carbs_g
+        float fat_g
+        float fiber_g
+    }
+
+    DIET_GOALS {
+        int id PK
+        int user_id FK
+        float calorie_target
+        float protein_target_g
+        float carbs_target_g
+        float fat_target_g
+        datetime created_at
+        datetime updated_at
+    }
+
+    %% Relationships
+    USERS ||--o{ EXERCISES : "has"
+    USERS ||--o{ ROUTINES : "has"
+    USERS ||--o{ WORKOUTS : "has"
+    USERS ||--o{ USER_PROFILES : "has"
+    USERS ||--o{ BOOKINGS : "has"
+    USERS ||--o{ CUSTOM_FOODS : "has"
+    USERS ||--o{ MEALS : "has"
+    USERS ||--o{ DIET_LOGS : "has"
+    USERS ||--|| DIET_GOALS : "has"
+
+    ROUTINES ||--o{ ROUTINE_EXERCISES : "contains"
+    EXERCISES ||--o{ ROUTINE_EXERCISES : "used in"
+
+    WORKOUTS ||--o{ WORKOUT_EXERCISES : "contains"
+    EXERCISES ||--o{ WORKOUT_EXERCISES : "used in"
+    WORKOUT_EXERCISES ||--o{ WORKOUT_SETS : "has"
+
+    GYMS ||--o{ GYM_SLOTS : "has"
+    GYM_SLOTS ||--o{ BOOKINGS : "booked in"
+    GYMS ||--o{ BOOKINGS : "booked at"
+
+    FOODS ||--o{ FOOD_SERVINGS : "has"
+
+    MEALS ||--o{ MEAL_ITEMS : "contains"
+    FOODS ||--o{ MEAL_ITEMS : "used in"
+    CUSTOM_FOODS ||--o{ MEAL_ITEMS : "used in"
+    FOOD_SERVINGS ||--o{ MEAL_ITEMS : "used in"
+
+    DIET_LOGS ||--o{ DIET_LOG_ITEMS : "contains"
+    FOODS ||--o{ DIET_LOG_ITEMS : "logged as"
+    CUSTOM_FOODS ||--o{ DIET_LOG_ITEMS : "logged as"
+    FOOD_SERVINGS ||--o{ DIET_LOG_ITEMS : "logged as"

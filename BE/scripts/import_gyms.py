@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import os
 import sys
 from pathlib import Path
 from typing import Any
@@ -8,13 +9,15 @@ PROJECT_ROOT = Path(__file__).resolve().parents[2]
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
+DATABASE_PATH = Path("/Users/snehasishdutta/Desktop/LiftLog/LiftLog/liftlog.db")
+os.environ["DATABASE_URL"] = f"sqlite:///{DATABASE_PATH.as_posix()}"
+
 from openpyxl import load_workbook
 from sqlalchemy.orm import Session
 
 from BE.app.db import SessionLocal, init_db
 from BE.app.models import Gym
 
-PROJECT_ROOT = Path(__file__).resolve().parents[2]
 WORKBOOK_PATH = PROJECT_ROOT / "BE" / "Temp" / "kolkata_25_real_gyms_updated.xlsx"
 
 REQUIRED_HEADERS = {"name", "address", "latitude", "longitude"}

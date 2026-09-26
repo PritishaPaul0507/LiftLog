@@ -22,3 +22,30 @@ FE/.angular/
 
 # OS files
 .DS_Store
+
+# Environment variables / secrets
+.env
+.env.*
+!.env.example
+
+# Logs
+*.log
+BE/backend.log
+
+# Local databases
+*.db
+*.sqlite
+*.sqlite3
+
+# Temporary / development files
+TEMP/
+temp.txt
+BE/Temp/test.txt
+
+# Local data / mock services
+data/
+mock-server/
+
+# IDE
+.idea/
+.vscode/

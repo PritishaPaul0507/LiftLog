@@ -27,23 +27,19 @@ router = APIRouter(prefix="/auth", tags=["auth"])
 
 @router.post("/signup", response_model=SignupResponse)
 def signup(payload: SignupRequest, db: Session = Depends(get_db)):
-    logger.info("AUTH /signup called with payload=%s", payload.model_dump())
-
     email = payload.email.strip().lower()
     if not email:
-        logger.warning("AUTH /signup failed: email missing")
+        logger.info("Signup rejected: email missing")
         raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="Email is required")
 
-    logger.info("AUTH /signup checking DB for email=%s", email)
     existing_user = db.query(User).filter(User.email == email).first()
     if existing_user:
-        logger.warning("AUTH /signup user already exists: id=%s email=%s", existing_user.id, existing_user.email)
+        logger.info("Signup rejected: account already exists")
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
             detail="the user already exist please log in",
         )
 
-    logger.info("AUTH /signup creating new user for email=%s full_name=%s", email, payload.full_name.strip())
     user = User(
         email=email,
         password_hash=hash_password(payload.password),
@@ -53,10 +49,7 @@ def signup(payload: SignupRequest, db: Session = Depends(get_db)):
     db.add(user)
     db.commit()
     db.refresh(user)
-    logger.info("AUTH /signup user created in DB: id=%s", user.id)
-
     access_token, refresh_token = issue_tokens_for_user(db, user.id)
-    logger.info("AUTH /signup issued JWT tokens for user_id=%s", user.id)
 
     response = SignupResponse(
         message="User created successfully",
@@ -67,35 +60,30 @@ def signup(payload: SignupRequest, db: Session = Depends(get_db)):
             "full_name": user.full_name,
         },
     )
-    logger.info("AUTH /signup response=%s", response.model_dump())
+    logger.info("User account created user_id=%s", user.id)
     return response
 
 
 @router.post("/login", response_model=SignupResponse)
 def demo_login(payload: LoginRequest, db: Session = Depends(get_db)):
-    logger.info("AUTH /login called with payload=%s", payload.model_dump())
-
     email = payload.email.strip().lower()
-    logger.info("AUTH /login checking DB for email=%s", email)
     user = db.query(User).filter(User.email == email).first()
     if user is None:
-        logger.warning("AUTH /login failed: user not found for email=%s", email)
+        logger.warning("Login rejected: credentials invalid")
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid email or password",
         )
 
     password_valid = verify_password(payload.password, user.password_hash)
-    logger.info("AUTH /login password check for user_id=%s result=%s", user.id, password_valid)
     if not password_valid:
-        logger.warning("AUTH /login failed: password mismatch for user_id=%s", user.id)
+        logger.warning("Login rejected: credentials invalid")
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid email or password",
         )
 
     access_token, refresh_token = issue_tokens_for_user(db, user.id)
-    logger.info("AUTH /login issued JWT tokens for user_id=%s", user.id)
 
     response = SignupResponse(
         message="Loged in successfully",
@@ -106,39 +94,35 @@ def demo_login(payload: LoginRequest, db: Session = Depends(get_db)):
             "full_name": user.full_name,
         },
     )
-    logger.info("AUTH /login response=%s", response.model_dump())
+    logger.info("Login succeeded user_id=%s", user.id)
     return response
 
 
 @router.post("/refresh", response_model=SignupResponse)
 def refresh_access_token(payload: RefreshTokenRequest, db: Session = Depends(get_db)):
-    logger.info("AUTH /refresh called with refresh_token=%s", payload.refresh_token)
-
     token = payload.refresh_token.strip()
     if not token:
-        logger.warning("AUTH /refresh failed: empty refresh token")
+        logger.info("Token refresh rejected: token missing")
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail="Refresh token is required",
         )
 
-    logger.info("AUTH /refresh decoding refresh token")
     user_id_int = decode_token(token, expected_type="refresh")
     user = db.query(User).filter(User.id == user_id_int).first()
     if user is None:
-        logger.warning("AUTH /refresh failed: no user found for user_id=%s", user_id_int)
+        logger.warning("Token refresh rejected: account not found")
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid refresh token",
         )
     if user.refresh_token != token:
-        logger.warning("AUTH /refresh failed: stored refresh token mismatch for user_id=%s", user.id)
+        logger.warning("Token refresh rejected: token no longer valid")
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Refresh token is no longer valid",
         )
 
-    logger.info("AUTH /refresh issuing fresh tokens for user_id=%s", user.id)
     access_token, refresh_token = issue_tokens_for_user(db, user.id)
 
     response = SignupResponse(
@@ -150,6 +134,6 @@ def refresh_access_token(payload: RefreshTokenRequest, db: Session = Depends(get
             "full_name": user.full_name,
         },
     )
-    logger.info("AUTH /refresh response=%s", response.model_dump())
+    logger.info("Token refresh succeeded user_id=%s", user.id)
     return response
 

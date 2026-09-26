@@ -1,6 +1,9 @@
 import json
+import logging
 import re
 from pathlib import Path
+
+logger = logging.getLogger("liftlog")
 
 
 def load_exercises_data():
@@ -9,7 +12,7 @@ def load_exercises_data():
         file_path = Path(__file__).resolve().parents[3] / "FE" / "exercises-data.js"
         
         if not file_path.exists():
-            print(f"Exercises data file not found: {file_path}")
+            logger.warning("Exercise seed file is unavailable; fallback data will be used")
             return []
 
         with open(file_path, 'r', encoding='utf-8') as f:
@@ -18,7 +21,7 @@ def load_exercises_data():
         # Extract the array content from export const EXDB=[...];
         match = re.search(r'export\s+const\s+EXDB=(\[.*?\]);', content, re.DOTALL)
         if not match:
-            print("Could not find EXDB export in exercises-data.js")
+            logger.warning("Exercise seed file has an unsupported format; fallback data will be used")
             return []
 
         json_str = match.group(1)
@@ -34,6 +37,6 @@ def load_exercises_data():
 
         return result
 
-    except Exception as e:
-        print(f"Error loading exercises data: {e}")
+    except (OSError, json.JSONDecodeError, TypeError, ValueError):
+        logger.exception("Failed to load exercise seed data")
         return []

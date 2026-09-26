@@ -15,18 +15,14 @@ router = APIRouter(prefix="/routines", tags=["routines"])
 
 @router.get("", response_model=RoutineListResponse)
 def get_routines(db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
-    logger.info("ROUTINES /routines called for user_id=%s", current_user.id)
-
     routines = db.query(Routine).filter(Routine.user_id == current_user.id).all()
-    logger.info("ROUTINES /routines found %d routines", len(routines))
+    logger.debug("Loaded %d routines for user_id=%s", len(routines), current_user.id)
 
     return RoutineListResponse(routines=routines)
 
 
 @router.post("", response_model=RoutineReadWithExercises)
 def create_routine(payload: RoutineCreate, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
-    logger.info("ROUTINES POST /routines called for user_id=%s with payload=%s", current_user.id, payload.model_dump())
-
     # Create routine
     routine = Routine(
         user_id=current_user.id,
@@ -34,7 +30,7 @@ def create_routine(payload: RoutineCreate, db: Session = Depends(get_db), curren
     )
     db.add(routine)
     db.flush()
-    logger.info("ROUTINES POST /routines created routine_id=%s", routine.id)
+    logger.info("Routine created routine_id=%s", routine.id)
 
     # Add exercises to routine
     exercise_details = []
@@ -60,7 +56,7 @@ def create_routine(payload: RoutineCreate, db: Session = Depends(get_db), curren
             target_sets=exercise_req.target_sets,
             order_index=idx,
         ))
-        logger.info("ROUTINES POST /routines added exercise: exercise_id=%s order_index=%s", exercise.id, idx)
+        logger.debug("Routine exercise added routine_id=%s exercise_id=%s", routine.id, exercise.id)
 
     db.commit()
     db.refresh(routine)
@@ -70,21 +66,18 @@ def create_routine(payload: RoutineCreate, db: Session = Depends(get_db), curren
         name=routine.name,
         exercises=exercise_details,
     )
-    logger.info("ROUTINES POST /routines response=%s", response.model_dump())
     return response
 
 
 @router.get("/{routine_id}", response_model=RoutineReadWithExercises)
 def get_routine(routine_id: int, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
-    logger.info("ROUTINES GET /routines/{%d} called for user_id=%s", routine_id, current_user.id)
-
     routine = db.query(Routine).filter(
         Routine.id == routine_id,
         Routine.user_id == current_user.id
     ).first()
 
     if not routine:
-        logger.warning("ROUTINES GET /routines/{%d} not found or unauthorized", routine_id)
+        logger.info("Routine lookup returned no result routine_id=%s", routine_id)
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Routine not found")
 
     # Get exercises for this routine
@@ -103,38 +96,33 @@ def get_routine(routine_id: int, db: Session = Depends(get_db), current_user: Us
                 order_index=re.order_index,
             ))
 
-    logger.info("ROUTINES GET /routines/{%d} found %d exercises", routine_id, len(exercise_details))
+    logger.debug("Loaded %d exercises for routine_id=%s", len(exercise_details), routine_id)
 
     response = RoutineReadWithExercises(
         routine_id=routine.id,
         name=routine.name,
         exercises=exercise_details,
     )
-    logger.info("ROUTINES GET /routines/{%d} response=%s", routine_id, response.model_dump())
     return response
 
 
 @router.put("/{routine_id}", response_model=RoutineReadWithExercises)
 def update_routine(routine_id: int, payload: RoutineUpdate, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
-    logger.info("ROUTINES PUT /routines/{%d} called for user_id=%s with payload=%s", routine_id, current_user.id, payload.model_dump())
-
     routine = db.query(Routine).filter(
         Routine.id == routine_id,
         Routine.user_id == current_user.id
     ).first()
 
     if not routine:
-        logger.warning("ROUTINES PUT /routines/{%d} not found or unauthorized", routine_id)
+        logger.info("Routine update returned no result routine_id=%s", routine_id)
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Routine not found")
 
     # Update routine name if provided
     if payload.name:
         routine.name = payload.name
-        logger.info("ROUTINES PUT /routines/{%d} updated name=%s", routine_id, payload.name)
 
     # Delete all existing routine_exercises for this routine
     db.query(RoutineExercise).filter(RoutineExercise.routine_id == routine_id).delete()
-    logger.info("ROUTINES PUT /routines/{%d} deleted existing exercises", routine_id)
 
     # Add new exercises
     exercise_details = []
@@ -160,7 +148,7 @@ def update_routine(routine_id: int, payload: RoutineUpdate, db: Session = Depend
             target_sets=exercise_req.target_sets,
             order_index=idx,
         ))
-        logger.info("ROUTINES PUT /routines/{%d} added exercise: exercise_id=%s order_index=%s", routine_id, exercise.id, idx)
+        logger.debug("Routine exercise updated routine_id=%s exercise_id=%s", routine_id, exercise.id)
 
     db.commit()
     db.refresh(routine)
@@ -170,36 +158,33 @@ def update_routine(routine_id: int, payload: RoutineUpdate, db: Session = Depend
         name=routine.name,
         exercises=exercise_details,
     )
-    logger.info("ROUTINES PUT /routines/{%d} response=%s", routine_id, response.model_dump())
+    logger.info("Routine updated routine_id=%s", routine_id)
     return response
 
 
 @router.delete("/{routine_id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_routine(routine_id: int, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
-    logger.info("ROUTINES DELETE /routines/{%d} called for user_id=%s", routine_id, current_user.id)
-
     routine = db.query(Routine).filter(
         Routine.id == routine_id,
         Routine.user_id == current_user.id
     ).first()
 
     if not routine:
-        logger.warning("ROUTINES DELETE /routines/{%d} not found or unauthorized", routine_id)
+        logger.info("Routine deletion returned no result routine_id=%s", routine_id)
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Routine not found")
 
     # Set workouts.routine_id = NULL for all workouts belonging to this routine
     workouts = db.query(Workout).filter(Workout.routine_id == routine_id).all()
     for workout in workouts:
         workout.routine_id = None
-        logger.info("ROUTINES DELETE /routines/{%d} cleared routine_id from workout_id=%s", routine_id, workout.id)
+        logger.debug("Detached workout_id=%s from deleted routine_id=%s", workout.id, routine_id)
 
     # Delete routine_exercises for this routine
     db.query(RoutineExercise).filter(RoutineExercise.routine_id == routine_id).delete()
-    logger.info("ROUTINES DELETE /routines/{%d} deleted routine_exercises", routine_id)
 
     # Delete routine
     db.delete(routine)
     db.commit()
 
-    logger.info("ROUTINES DELETE /routines/{%d} deleted successfully", routine_id)
+    logger.info("Routine deleted routine_id=%s", routine_id)
     return None

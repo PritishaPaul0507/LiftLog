@@ -16,14 +16,12 @@ router = APIRouter(prefix="/exercises", tags=["exercises"])
 
 @router.get("", response_model=list[ExerciseRead])
 def get_exercises(db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
-    logger.info("EXERCISES /exercises called for user_id=%s", current_user.id)
-
     # Get all exercises (both default and custom)
     exercises = db.query(Exercise).filter(
         (Exercise.user_id == None) | (Exercise.user_id == current_user.id)
     ).all()
 
-    logger.info("EXERCISES /exercises found %d exercises", len(exercises))
+    logger.debug("Loaded %d exercises", len(exercises))
     return exercises
 
 

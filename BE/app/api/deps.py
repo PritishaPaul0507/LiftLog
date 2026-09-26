@@ -51,8 +51,8 @@ def create_refresh_token(user_id: int) -> str:
 def decode_token(token: str, expected_type: str) -> int:
     try:
         payload = jwt.decode(token, JWT_SECRET_KEY, algorithms=[JWT_ALGORITHM])
-    except jwt.PyJWTError as exc:
-        logger.warning("AUTH decode failed: expected_type=%s error=%s", expected_type, exc)
+    except jwt.PyJWTError:
+        logger.info("Token validation failed token_type=%s", expected_type)
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid or expired token",
@@ -73,8 +73,8 @@ def decode_token(token: str, expected_type: str) -> int:
 
     try:
         user_id_int = int(payload.get("sub"))
-    except (TypeError, ValueError) as exc:
-        logger.warning("AUTH token payload invalid: token_type=%s payload=%s", expected_type, payload)
+    except (TypeError, ValueError):
+        logger.warning("Token subject invalid token_type=%s", expected_type)
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid token payload",
@@ -100,7 +100,7 @@ def get_current_user(
     db: Session = Depends(get_db),
 ) -> User:
     if credentials is None or not credentials.credentials:
-        logger.warning("AUTH missing credentials on protected route")
+        logger.info("Protected request rejected: credentials missing")
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Missing or invalid Authorization header",
@@ -111,24 +111,18 @@ def get_current_user(
     try:
         user_id_int = decode_token(token, expected_type="access")
     except HTTPException:
-        logger.warning("AUTH access token rejected: token_prefix=%s", token[:12])
         raise
 
     user = db.query(User).filter(User.id == user_id_int).first()
     if user is None:
-        logger.warning("AUTH user not found for access token: user_id=%s", user_id_int)
+        logger.info("Access token rejected: account not found")
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid access token",
             headers={"WWW-Authenticate": "Bearer"},
         )
     if user.access_token != token:
-        logger.warning(
-            "AUTH token mismatch: user_id=%s stored_token_present=%s current_token_present=%s",
-            user.id,
-            bool(user.access_token),
-            bool(token),
-        )
+        logger.info("Access token rejected: token no longer valid")
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Access token is no longer valid",

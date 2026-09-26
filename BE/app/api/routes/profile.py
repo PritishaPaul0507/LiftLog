@@ -65,8 +65,6 @@ def get_profile_history(
 
 @router.post("", response_model=UserProfileResponse)
 def update_user_profile(payload: UserProfileRequest, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
-    logger.info("PROFILE /profile called for user_id=%s with payload=%s", current_user.id, payload.model_dump(exclude_none=True))
-
     latest_profile = (
         db.query(UserProfile)
         .filter(UserProfile.user_id == current_user.id)
@@ -75,7 +73,6 @@ def update_user_profile(payload: UserProfileRequest, db: Session = Depends(get_d
     )
 
     if latest_profile:
-        logger.info("PROFILE /profile found latest version=%s for user_id=%s", latest_profile.version, current_user.id)
         next_version = latest_profile.version + 1
         snapshot = {
             "user_id": current_user.id,
@@ -116,21 +113,17 @@ def update_user_profile(payload: UserProfileRequest, db: Session = Depends(get_d
         snapshot.update(update_fields)
         profile = UserProfile(**snapshot)
         db.add(profile)
-        logger.info("PROFILE /profile created new version=%s for user_id=%s with updated fields=%s", next_version, current_user.id, list(update_fields.keys()))
     else:
-        logger.info("PROFILE /profile creating first profile version for user_id=%s", current_user.id)
         profile = UserProfile(
             user_id=current_user.id,
             version=1,
             **payload.model_dump(exclude_none=True)
         )
         db.add(profile)
-        logger.info("PROFILE /profile first profile version created")
 
     db.commit()
     db.refresh(profile)
-    logger.info("PROFILE /profile saved profile to DB: profile_id=%s version=%s", profile.id, profile.version)
 
     response = UserProfileResponse(message="Profile updated successfully")
-    logger.info("PROFILE /profile response=%s", response.model_dump())
+    logger.info("Profile updated user_id=%s version=%s", current_user.id, profile.version)
     return response

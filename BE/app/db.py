@@ -29,7 +29,7 @@ def ensure_user_password_hash_column() -> None:
         try:
             conn.execute(text("SELECT password_hash FROM users LIMIT 1"))
         except exc.DatabaseError:
-            logger.warning("DB migration: adding missing password_hash column to users")
+            logger.info("DB migration: adding missing password_hash column to users")
             conn.execute(text("ALTER TABLE users ADD COLUMN password_hash VARCHAR"))
 
 
@@ -39,7 +39,7 @@ def ensure_user_token_columns() -> None:
             try:
                 conn.execute(text(f"SELECT {column_name} FROM users LIMIT 1"))
             except exc.DatabaseError:
-                logger.warning("DB migration: adding missing %s column to users", column_name)
+                logger.info("DB migration: adding missing %s column to users", column_name)
                 conn.execute(text(f"ALTER TABLE users ADD COLUMN {column_name} VARCHAR"))
 
 
@@ -48,7 +48,7 @@ def ensure_diet_log_item_columns() -> None:
         try:
             conn.execute(text("SELECT serving_id FROM diet_log_items LIMIT 1"))
         except exc.DatabaseError:
-            logger.warning("DB migration: adding missing serving_id column to diet_log_items")
+            logger.info("DB migration: adding missing serving_id column to diet_log_items")
             conn.execute(text("ALTER TABLE diet_log_items ADD COLUMN serving_id INTEGER"))
 
 
@@ -58,22 +58,22 @@ def ensure_profile_version_columns() -> None:
         for index_row in index_rows:
             index_name = index_row[1]
             if index_name in {"ix_user_profiles_user_id", "uq_user_profile_version"}:
-                logger.warning("DB migration: dropping legacy profile index %s", index_name)
+                logger.info("DB migration: dropping legacy profile index %s", index_name)
                 conn.execute(text(f"DROP INDEX IF EXISTS {index_name}"))
 
         columns = conn.execute(text("PRAGMA table_info(user_profiles)")).fetchall()
         column_names = {row[1] for row in columns}
 
         if "version" not in column_names:
-            logger.warning("DB migration: adding missing version column to user_profiles")
+            logger.info("DB migration: adding missing version column to user_profiles")
             conn.execute(text("ALTER TABLE user_profiles ADD COLUMN version INTEGER NOT NULL DEFAULT 1"))
 
         if "created_at" not in column_names:
-            logger.warning("DB migration: adding missing created_at column to user_profiles")
+            logger.info("DB migration: adding missing created_at column to user_profiles")
             conn.execute(text("ALTER TABLE user_profiles ADD COLUMN created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP"))
 
         if "updated_at" in column_names:
-            logger.warning("DB migration: removing legacy updated_at column from user_profiles")
+            logger.info("DB migration: removing legacy updated_at column from user_profiles")
             try:
                 conn.execute(text("ALTER TABLE user_profiles DROP COLUMN updated_at"))
             except Exception:
@@ -161,7 +161,7 @@ def ensure_workout_name_column() -> None:
         try:
             conn.execute(text("SELECT workout_name FROM workouts LIMIT 1"))
         except exc.DatabaseError:
-            logger.warning("DB migration: adding missing workout_name column to workouts")
+            logger.info("DB migration: adding missing workout_name column to workouts")
             conn.execute(text("ALTER TABLE workouts ADD COLUMN workout_name VARCHAR NOT NULL DEFAULT ''"))
 
         conn.execute(text("UPDATE workouts SET workout_name = CAST(id AS VARCHAR) WHERE workout_name IS NULL OR workout_name = ''"))

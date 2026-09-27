@@ -1,0 +1,170 @@
+@if (shouldShow) {
+
+  @if (isOpen) {
+
+    <section
+      class="coach-panel"
+      aria-label="LiftLog AI Coach"
+    >
+
+      <header class="coach-header">
+
+        <div class="coach-identity">
+
+          <div class="coach-avatar">
+            ✦
+          </div>
+
+          <div>
+            <h2>
+              AI Coach
+            </h2>
+
+            <div class="coach-status">
+              <span class="status-dot"></span>
+              Online
+            </div>
+          </div>
+
+        </div>
+
+
+        <button
+          class="close-button"
+          type="button"
+          aria-label="Close AI Coach"
+          (click)="closeCoach()"
+        >
+          ×
+        </button>
+
+      </header>
+
+
+      <div
+        #messageContainer
+        class="coach-messages"
+      >
+
+        @for (
+          item of messages;
+          track $index
+        ) {
+
+          <div
+            class="message-row"
+            [class.user-row]="
+              item.sender === 'user'
+            "
+          >
+
+            @if (
+              item.sender === 'coach'
+            ) {
+              <div class="message-avatar">
+                ✦
+              </div>
+            }
+
+
+            <div
+              class="message-bubble"
+              [class.user-message]="
+                item.sender === 'user'
+              "
+              [class.coach-message]="
+                item.sender === 'coach'
+              "
+            >
+              {{ item.text }}
+            </div>
+
+          </div>
+
+        }
+
+
+        @if (isLoading) {
+
+          <div class="message-row">
+
+            <div class="message-avatar">
+              ✦
+            </div>
+
+            <div
+              class="
+                message-bubble
+                coach-message
+                typing-message
+              "
+            >
+              <span></span>
+              <span></span>
+              <span></span>
+            </div>
+
+          </div>
+
+        }
+
+      </div>
+
+
+      <div class="coach-input-area">
+
+        <textarea
+          [(ngModel)]="message"
+          class="coach-input"
+          rows="1"
+          maxlength="1000"
+          placeholder="Ask your coach..."
+          aria-label="Message AI Coach"
+          [disabled]="isLoading"
+          (keydown)="onInputKeydown($event)"
+        ></textarea>
+
+
+        <button
+          class="send-button"
+          type="button"
+          aria-label="Send message"
+          [disabled]="
+            isLoading ||
+            !message.trim()
+          "
+          (click)="sendMessage()"
+        >
+          ➜
+        </button>
+
+      </div>
+
+    </section>
+
+  }
+
+
+  <button
+    class="coach-launcher"
+    type="button"
+    aria-label="Open AI Coach"
+    [class.coach-open]="isOpen"
+    (click)="toggleCoach()"
+  >
+
+    @if (isOpen) {
+      ×
+    } @else {
+      <span class="launcher-icon">
+        ✦
+      </span>
+
+      <span class="launcher-label">
+        Coach
+      </span>
+    }
+
+  </button>
+
+}

@@ -713,7 +713,20 @@ export interface ExerciseApiRecord {
 }
 
 
+/* =========================================================
+   AI COACH
+========================================================= */
 
+export interface AiCoachChatRequest {
+  page: string;
+  context: string;
+  text: string;
+}
+
+
+export interface AiCoachChatResponse {
+  text: string;
+}
 
 
 /* =========================================================
@@ -787,7 +800,30 @@ export class LiftlogApiService {
 
 
   }
+    /* =====================================================
+     AI COACH
+  ===================================================== */
 
+  chatWithCoach(
+    token: string,
+    request:
+      AiCoachChatRequest,
+  ):
+    Observable<AiCoachChatResponse> {
+
+    return this.http
+      .post<AiCoachChatResponse>(
+        `${this.apiUrl}/ai/coach/chat`,
+        request,
+        {
+          headers:
+            this.authHeaders(
+              token,
+            ),
+        },
+      );
+
+  }
 
 
 

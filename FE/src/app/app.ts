@@ -7,6 +7,10 @@ import {
   RouterOutlet,
 } from '@angular/router';
 
+import {
+  AiCoach,
+} from './components/ai-coach/ai-coach';
+
 
 type ThemeMode =
   | 'light'
@@ -19,6 +23,7 @@ type ThemeMode =
 
   imports: [
     RouterOutlet,
+    AiCoach,
   ],
 
   templateUrl:

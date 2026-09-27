@@ -8,7 +8,6 @@ BE/database.txt
 FE.log
 nohup.out
 
-
 # Python cache
 __pycache__/
 *.py[cod]
@@ -22,4 +21,32 @@ FE/.angular/
 
 # OS files
 .DS_Store
+
+# Backend temporary files
 BE/Temp/
+
+# Environment variables / secrets
+.env
+.env.*
+!.env.example
+
+# Logs
+*.log
+BE/backend.log
+
+# Local databases
+*.db
+*.sqlite
+*.sqlite3
+
+# Temporary / development files
+TEMP/
+temp.txt
+
+# Local data / mock services
+data/
+mock-server/
+
+# IDE
+.idea/
+.vscode/

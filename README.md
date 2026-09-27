@@ -1,611 +1,283 @@
 # LiftLog
 
-A mobile-first full-stack fitness platform for tracking workouts, nutrition, physical progress, nearby gyms, and gym session bookings from one place.
+LiftLog is a full-stack fitness companion for planning and recording strength workouts, tracking nutrition, booking gym slots, building a personal fitness profile, and receiving contextual guidance from an AI coach.
 
-LiftLog combines workout logging, nutrition tracking, progress insights, nearby-gym discovery, and gym-session booking into a single fitness experience.
+The repository contains an Angular single-page application (`FE`) and a FastAPI/SQLAlchemy REST API (`BE`). The application is designed so that user-owned records are identified from the bearer token rather than accepting a `user_id` from the client.
 
----
+## Contents
 
-## Features
+- [What it does](#what-it-does)
+- [Technology](#technology)
+- [Repository layout](#repository-layout)
+- [Run locally](#run-locally)
+- [Configuration](#configuration)
+- [Application areas](#application-areas)
+- [API overview](#api-overview)
+- [Data model](#data-model)
+- [Seed and import data](#seed-and-import-data)
+- [Testing and development](#testing-and-development)
+- [Operational notes](#operational-notes)
 
-### Authentication & User Profile
+## What it does
 
-- User signup and login
-- JWT-based authentication
-- Access and refresh token support
-- Personalized fitness profile
-- Fitness onboarding
-- Editable account information
-- User-specific workout and booking data
+LiftLog currently provides:
 
-### Workout Tracking
+- Email/password sign-up, login, JWT access/refresh tokens, and automatic client-side token refresh.
+- Versioned onboarding and profile data covering physical information, lifestyle, training preferences, nutrition preferences, and goals.
+- Reusable workout routines, an exercise catalogue, completed workout recording, workout history, and exercise set/history queries.
+- Gym discovery by location, gym details, dated time slots, bookings, and booking cancellation.
+- A nutrition log with system foods and servings, user-created foods, reusable meals, daily nutrient totals, historical views, and calorie/macro goals.
+- An authenticated AI coach endpoint that supplies Gemini with a bounded snapshot of the user's routines, recent workouts, latest profile, diet logs, weight changes, and diet goals.
 
-- Create and manage workout routines
-- Start an empty workout
-- Add exercises to workouts
-- Track sets, repetitions, and weight
-- Complete and save workout sessions
-- View workout history
-- Open detailed workout summaries
-- Track workout volume and activity
+## Technology
 
-### Progress Tracking
+| Layer | Implementation |
+| --- | --- |
+| Frontend | Angular 21, TypeScript, RxJS, standalone components and Angular Router |
+| Backend | Python, FastAPI, Uvicorn, Pydantic v2 |
+| Persistence | SQLAlchemy 2; SQLite by default, configurable with `DATABASE_URL` |
+| Authentication | Password hashing with PBKDF2-HMAC-SHA256 and signed JWT access/refresh tokens |
+| AI coach | Google Gen AI SDK / Gemini |
+| Data imports | `openpyxl` for gym sheets; native XLSX/XML parsing for food sheets |
+| Tests | Pytest and FastAPI `TestClient`; Angular/Vitest test configuration |
 
-- Weekly workout statistics
-- Training volume
-- Exercise count
-- Workout streaks
-- Weight tracking
-- Weight progress visualization
-- Recent workout activity
-- Progress-over-time insights
-
-### Nutrition Tracking
-
-- Search and select food items
-- Track daily calories
-- Track protein
-- Track carbohydrates
-- Track fats
-- Nutrition-focused dashboard
-- Food and meal tracking workflow
-
-### Gym Discovery
-
-- Discover nearby gyms using browser geolocation
-- Distance-based gym results
-- View gym preview images
-- View gym information
-- View address and location details
-- Browse available gym time slots
-
-### Gym Booking
-
-- Browse available dates and slots
-- Book gym sessions
-- View booking confirmation
-- View personal bookings from the Profile page
-- Open individual booking details
-- View booked gym, date, and time
-- Get directions to the gym
-- View booking status
-
----
-
-## Tech Stack
-
-### Frontend
-
-- Angular
-- TypeScript
-- HTML5
-- CSS3
-- RxJS
-- Angular Router
-- Responsive mobile-first UI
-
-### Backend
-
-- Python
-- FastAPI
-- SQLAlchemy
-- REST APIs
-- JWT Authentication
-- SQLite for local development
-
-### Development Tools
-
-- Git
-- GitHub
-- VS Code
-- Postman
-- Swagger / OpenAPI
-- Python Virtual Environments
-- npm
-- Angular CLI
-
----
-
-## Project Structure
+## Repository layout
 
 ```text
 LiftLog/
-│
-├── BE/
+├── BE/                         # FastAPI backend
 │   ├── app/
-│   │   ├── api/
-│   │   ├── core/
-│   │   └── ...
-│   │
-│   └── ...
-│
-├── FE/
-│   ├── public/
-│   │   └── gyms/
-│   │
-│   ├── src/
-│   │   ├── app/
-│   │   │   ├── pages/
-│   │   │   ├── services/
-│   │   │   └── ...
-│   │   │
-│   │   └── environments/
-│   │
-│   ├── angular.json
-│   └── package.json
-│
-├── .gitignore
+│   │   ├── api/routes/         # Auth, workouts, diet, gyms, profile, coach routes
+│   │   ├── core/config.py      # Environment configuration and production checks
+│   │   ├── services/ai_coach.py
+│   │   ├── utils/              # Exercise and food loaders
+│   │   ├── db.py               # Engine, sessions, initialization, lightweight migrations
+│   │   ├── models.py           # SQLAlchemy schema
+│   │   └── schemas.py          # Request/response models
+│   ├── Documents/Database/     # Mermaid ER diagram and rendered schema image
+│   ├── scripts/                # Food and gym spreadsheet importers
+│   ├── tests/
+│   └── .env.production.example
+├── FE/                         # Angular frontend
+│   ├── public/gyms/            # Local gym imagery
+│   └── src/app/
+│       ├── core/               # Auth service, route guard, auth interceptor
+│       ├── pages/              # Product pages
+│       ├── services/           # REST clients
+│       └── shared/             # Reusable dialog
+├── project_context.txt         # Historical project and schema context
 └── README.md
 ```
 
----
-
-## Application Flow
-
-```text
-Signup / Login
-      │
-      ▼
-  Onboarding
-      │
-      ▼
-     Home
-      │
-      ├──────────────► Workouts
-      │                   │
-      │                   ├── Create Routine
-      │                   ├── Start Workout
-      │                   ├── Add Exercises
-      │                   └── Workout History
-      │
-      ├──────────────► Nutrition
-      │                   │
-      │                   ├── Food Search
-      │                   ├── Calories
-      │                   └── Macronutrients
-      │
-      ├──────────────► Nearby Gyms
-      │                   │
-      │                   ▼
-      │              Gym Details
-      │                   │
-      │                   ▼
-      │              Available Slots
-      │                   │
-      │                   ▼
-      │                Booking
-      │
-      └──────────────► Profile
-                          │
-                          ├── Progress
-                          ├── My Bookings
-                          ├── Recent Activity
-                          └── Weight Journey
-```
-
----
-
-## Main Frontend Pages
-
-The Angular frontend includes application flows for:
-
-- Login
-- Signup
-- Onboarding
-- Home
-- Workout Dashboard
-- Active Workout
-- Exercise Picker
-- Workout History
-- Workout Detail
-- Nutrition
-- Food Picker
-- Profile
-- Account
-- Gym Booking
-- Gym Slot Selection
-- Gym Details
-- Booking Detail
-
----
-
-## API Overview
-
-The FastAPI backend exposes REST APIs used by the Angular frontend.
-
-### Authentication
-
-Handles:
-
-- User registration
-- Login
-- Access tokens
-- Refresh tokens
-- Authenticated user requests
-
-### User Profile
-
-Handles:
-
-- Loading profile information
-- Updating user information
-- Fitness profile data
-- Weight and progress information
-
-### Workouts
-
-Handles:
-
-- Workout sessions
-- Workout history
-- Workout details
-- Exercises
-- Sets
-- Repetitions
-- Workout volume
-
-### Nutrition
-
-Handles:
-
-- Food data
-- Food search
-- Calories
-- Macronutrients
-- Nutrition tracking
-
-### Gyms
-
-Handles:
-
-- Nearby gym discovery
-- Gym summaries
-- Gym details
-- Available gym slots
-- Individual slot information
-
-### Bookings
-
-Handles:
-
-- Creating gym bookings
-- Retrieving user bookings
-- Retrieving an individual booking
-- Booking status
-- Cancelling bookings
-
----
-
-## Gym Discovery & Booking Flow
-
-One of the larger full-stack workflows in LiftLog is gym discovery and booking.
-
-```text
-Browser Geolocation
-        │
-        ▼
-Nearby Gym API
-        │
-        ▼
-Nearby Gym Cards
-        │
-        ▼
-Gym Booking Page
-        │
-        ▼
-Available Gym Slots
-        │
-        ▼
-Select Date & Time
-        │
-        ▼
-Create Booking
-        │
-        ▼
-Booking Confirmation
-        │
-        ▼
-Profile → My Bookings
-        │
-        ▼
-Booking Detail Page
-```
-
----
-
-## Authentication Flow
-
-LiftLog uses JWT-based authentication.
-
-The frontend stores authentication tokens locally and automatically sends the access token with protected API requests.
-
-The authentication system supports:
-
-- Access tokens
-- Refresh tokens
-- Protected endpoints
-- Automatic authenticated requests
-- User-specific data
-
-Sensitive values such as production API keys and JWT secrets should be supplied through environment variables and must never be committed to the repository.
-
----
-
-## Running the Project Locally
+## Run locally
 
 ### Prerequisites
 
-Make sure the following are installed:
+- Python 3.10 or later
+- Node.js and npm compatible with Angular 21
+- A Gemini API key only if you want the AI coach endpoint to return responses
 
-- Git
-- Python 3
-- Node.js
-- npm
-- Angular CLI
+### 1. Configure the backend
 
----
-
-## 1. Clone the Repository
+From the repository root:
 
 ```bash
-git clone https://github.com/PritishaPaul0507/LiftLog.git
-cd LiftLog
+cd /Users/snehasishdutta/Desktop/LiftLog/LiftLog
+python3 -m venv .venv
+source .venv/bin/activate
+python3 -m pip install -r BE/requirements.txt
 ```
 
----
+Create `BE/.env` for local development (the committed `.env.production.example` is a reference for the complete production configuration):
 
-## 2. Backend Setup
+```dotenv
+APP_ENV=development
+DATABASE_URL=sqlite:///./liftlog.db
+JWT_SECRET_KEY=replace-with-a-long-unique-local-secret
+CORS_ORIGINS=http://localhost:4200
+SEED_DEMO_DATA=true
+# GEMINI_API_KEY=your-key-here
+```
 
-Create a Python virtual environment:
+Use a unique `JWT_SECRET_KEY` and set `GEMINI_API_KEY` to enable the coach. With the SQLite URL above, launching the API from the repository root creates/uses `liftlog.db` there.
+
+Start the API:
 
 ```bash
-python3 -m venv BE/.venv
+uvicorn BE.app.main:app --reload --port 8001
 ```
 
-Activate it on macOS or Linux:
+On startup, the API creates any missing tables and applies its built-in compatibility migrations. In non-production environments it also seeds a demo account and the exercise catalogue when `SEED_DEMO_DATA=true`.
+
+Useful local endpoints:
+
+- Health check: `http://localhost:8001/health`
+- Interactive API documentation: `http://localhost:8001/docs`
+- OpenAPI document: `http://localhost:8001/openapi.json`
+
+### 2. Start the frontend
+
+In a second terminal:
 
 ```bash
-source BE/.venv/bin/activate
+cd /Users/snehasishdutta/Desktop/LiftLog/LiftLog/FE
+npm ci
+npm start
 ```
 
-Install the backend dependencies required by the project.
+Open `http://localhost:4200`. Both Angular environment files currently target `http://localhost:8001/api/v1`; change `FE/src/environments/environment*.ts` if the API runs elsewhere.
 
-Then start the FastAPI backend from the project root:
+## Configuration
 
-```bash
-python -m uvicorn BE.app.main:app --reload --host 0.0.0.0 --port 8001
+The backend reads `BE/.env`. `BE/.env.production.example` lists the supported values:
+
+| Variable | Purpose |
+| --- | --- |
+| `APP_ENV` | `development`, `test`, or `production` |
+| `APP_NAME` | API display name |
+| `DATABASE_URL` | SQLAlchemy database URL; SQLite is the default |
+| `API_PREFIX` | API namespace, default `/api/v1` |
+| `JWT_SECRET_KEY`, `JWT_ALGORITHM` | JWT signing configuration |
+| `ACCESS_TOKEN_EXPIRE_MINUTES` | Access-token lifetime; default 15 minutes |
+| `REFRESH_TOKEN_EXPIRE_DAYS` | Refresh-token lifetime; default 30 days |
+| `CORS_ORIGINS` | Comma-separated allowed frontend origins |
+| `SEED_DEMO_DATA` | Enables startup demo/exercise seeding outside production |
+| `LOG_LEVEL`, `LOG_TO_FILE`, `UVICORN_ACCESS_LOG` | Logging controls |
+| `GEMINI_API_KEY`, `GEMINI_MODEL` | AI coach provider configuration |
+
+Production startup rejects weak/default JWT secrets, wildcard CORS, and non-HTTPS CORS origins. Keep `.env`, the SQLite database, logs, virtual environments, and temporary source spreadsheets out of version control; the supplied ignore files already do this.
+
+## Application areas
+
+### Authentication and session handling
+
+`POST /auth/signup` creates an email/password account. `POST /auth/login` validates it and issues both tokens; `POST /auth/refresh` rotates them. The Angular `AuthService` persists session data in local storage, proactively refreshes access tokens, and the HTTP interceptor retries a request once after a `401` using the refresh token.
+
+All protected API requests use:
+
+```http
+Authorization: Bearer <access_token>
 ```
 
-The backend will run at:
+The backend decodes the token, loads the user, and checks that the presented token is still the currently issued token stored for that user. This makes a later login/refresh invalidate an earlier access token for that account.
 
-```text
-http://localhost:8001
-```
+### Profile and onboarding
 
-Swagger API documentation is available at:
+The onboarding and profile pages capture physical data, habits, training history/preferences, dietary preferences, and goals. A profile submission creates a new version rather than mutating the prior row. The API can return the latest profile or its version history, which also gives the coach a recent weight-change signal.
 
-```text
-http://localhost:8001/docs
-```
+### Workouts
 
----
-
-## 3. Frontend Setup
-
-Open another terminal and navigate to the frontend:
-
-```bash
-cd FE
-```
-
-Install dependencies:
-
-```bash
-npm install
-```
-
-Start the Angular development server:
-
-```bash
-ng serve
-```
-
-The frontend will run at:
-
-```text
-http://localhost:4200
-```
-
----
-
-## UI Design
-
-LiftLog follows a mobile-first design system focused on simplicity and usability.
-
-The application uses:
-
-- Deep green primary colors
-- Mint accents
-- White cards
-- Rounded corners
-- Clean typography
-- Minimal navigation
-- Smartphone-first layouts
-- Consistent spacing
-- Responsive components
-
-The desktop experience keeps the same mobile-focused visual language rather than introducing a completely separate design.
-
----
-
-## Screenshots
-
-Application screenshots can be added here to showcase the main user flows.
-
-Recommended screenshots:
-
-### Home
-
-_Add screenshot here_
-
-### Workout Dashboard
-
-_Add screenshot here_
-
-### Active Workout
-
-_Add screenshot here_
+Users can manage routines made of ordered exercises and target set counts. A completed workout submission records its timestamps, optional routine, ordered exercises, and set-level weight/repetition data in one transaction. Workout history is paginated; exercise routes provide best/top sets and prior performance history for the signed-in user.
 
 ### Nutrition
 
-_Add screenshot here_
+System foods store nutrition per 100 g and optional familiar servings. Users can add their own foods, assemble reusable meals, and create or replace one daily diet log containing meal groups and food quantities. Nutrient values are calculated from the referenced food/custom-food and quantity, then persisted as snapshots in log items so historical entries survive future food edits or soft deletion. Goals are one row per user and daily summaries include consumed, target, remaining, and meal-level totals.
 
-### Profile & Progress
+### Gyms and bookings
 
-_Add screenshot here_
+The gym experience supports nearby-gym lookup from latitude/longitude, details and facilities, dated slots, booking creation, a user's booking list/detail, and cancellation. Slot availability is based on the gym's configured maximum bookings per slot; cancelled bookings no longer count as active occupancy.
 
-### Nearby Gyms
+### AI coach
 
-_Add screenshot here_
+`POST /ai/coach/chat` accepts a page identifier, optional conversation context, and a message. The server constructs the prompt from a checked-in template plus only the authenticated user's data: routines, up to 30 recent workouts, latest profile, 30 days of diet/weight history, and diet targets. It uses Gemini with constrained generation settings and returns `503` if no API key is configured.
 
-### Gym Booking
+## API overview
 
-_Add screenshot here_
+All paths below are relative to `/api/v1`. Except sign-up, login, refresh, health, and public gym reads, endpoints require a bearer token. FastAPI's `/docs` is the definitive request/response reference.
 
-### Booking Confirmation
+| Area | Endpoints |
+| --- | --- |
+| Auth | `POST /auth/signup`, `POST /auth/login`, `POST /auth/refresh` |
+| Profile | `GET /profile`, `GET /profile/history`, `POST /profile` |
+| Exercises | `GET /exercises`, `GET /exercises/{exercise_id}/top-sets`, `GET /exercises/{exercise_id}/history` |
+| Routines | `GET/POST /routines`, `GET/PUT/DELETE /routines/{routine_id}` |
+| Workouts | `POST /workouts`, `GET /workouts?limit=&offset=` |
+| Food catalogue | `GET /diet/foods`, `GET /diet/foods/{food_id}` |
+| Custom foods | `POST/GET /diet/custom-foods`, `PATCH/DELETE /diet/custom-foods/{custom_food_id}` |
+| Saved meals | `POST/GET /diet/meals`, `PATCH/DELETE /diet/meals/{meal_id}` |
+| Diet logs | `POST/GET /diet/logs`, `PATCH/DELETE /diet/logs/{log_id}` |
+| Nutrition reporting | `GET /diet/summary`, `GET /diet/history`, `GET/PUT /diet/goals` |
+| Gyms | `GET /gyms/nearby`, `GET /gyms/{gym_id}`, `GET /gyms/{gym_id}/details`, `GET /gyms/{gym_id}/slots`, `GET /gyms/{gym_id}/slots/{slot_id}` |
+| Bookings | `POST/GET /bookings`, `GET/DELETE /bookings/{booking_id}` |
+| AI coach | `POST /ai/coach/chat` |
 
-_Add screenshot here_
+Selected query parameters include `search`, `category`, `page`, and `page_size` for foods; `date` for daily diet reads/summaries; `start_date`/`end_date` for diet history; `limit`/`offset` for workout history; and `lat`/`lng` plus date ranges for gym discovery/slots.
 
----
+## Data model
 
-## Engineering Highlights
+The canonical entity-relationship diagram is [BE/Documents/Database/deepseek_mermaid_20260926_ef22e8.mermaid](BE/Documents/Database/deepseek_mermaid_20260926_ef22e8.mermaid), with a rendered image alongside it. The SQLAlchemy models are the runtime source of truth.
 
-LiftLog demonstrates several full-stack software engineering concepts:
-
-- REST API development
-- Angular component architecture
-- FastAPI backend architecture
-- JWT-based authentication
-- Access and refresh token handling
-- Frontend-backend integration
-- SQLAlchemy ORM
-- Database persistence
-- Responsive application design
-- State-driven UI updates
-- Browser geolocation
-- Workout session management
-- Nutrition tracking
-- User progress tracking
-- Booking workflows
-- Route-based navigation
-- Error handling
-- Form validation
-
----
-
-## Development Goals
-
-LiftLog is being developed as a portfolio-quality full-stack application demonstrating practical product development across both frontend and backend systems.
-
-The project focuses on:
-
-- Building maintainable frontend architecture
-- Designing REST APIs
-- Implementing authentication
-- Managing user-specific data
-- Integrating frontend and backend systems
-- Creating responsive user interfaces
-- Building real-world application workflows
-- Designing features around practical fitness use cases
-
----
-
-## Future Improvements
-
-Planned improvements include:
-
-- AI-assisted workout recommendations
-- Personalized nutrition recommendations
-- More detailed fitness analytics
-- Advanced progress charts
-- Gym search filters
-- Gym ratings and reviews
-- Booking reminders
-- Expanded food database coverage
-- Improved nutrition insights
-- Progressive Web App support
-- Cloud database integration
-- Production deployment
-- Automated testing
-- CI/CD pipelines
-- Improved observability and logging
-
----
-
-## Project Status
-
-LiftLog is currently under active development.
-
-Current development focuses on:
-
-- Authentication
-- User onboarding
-- Workout tracking
-- Workout history
-- Progress tracking
-- Nutrition tracking
-- Nearby gym discovery
-- Gym slot selection
-- Gym booking
-- Booking history
-- User profile management
-
----
-
-## Security
-
-The project is configured so that local development files and sensitive runtime data should not be committed to Git.
-
-Examples include:
-
-```text
-.env
-*.db
-*.sqlite
-*.sqlite3
-*.log
-node_modules/
-.venv/
+```mermaid
+erDiagram
+    USERS ||--o{ ROUTINES : owns
+    USERS ||--o{ WORKOUTS : logs
+    ROUTINES ||--o{ ROUTINE_EXERCISES : contains
+    EXERCISES ||--o{ ROUTINE_EXERCISES : selected_for
+    WORKOUTS ||--o{ WORKOUT_EXERCISES : contains
+    EXERCISES ||--o{ WORKOUT_EXERCISES : performed_as
+    WORKOUT_EXERCISES ||--o{ WORKOUT_SETS : has
+    USERS ||--o{ USER_PROFILES : versions
+    GYMS ||--o{ GYM_SLOTS : exposes
+    GYM_SLOTS ||--o{ BOOKINGS : receives
+    USERS ||--o{ BOOKINGS : makes
+    FOODS ||--o{ FOOD_SERVINGS : offers
+    USERS ||--o{ CUSTOM_FOODS : creates
+    USERS ||--o{ MEALS : saves
+    MEALS ||--o{ MEAL_ITEMS : contains
+    USERS ||--o{ DIET_LOGS : owns
+    DIET_LOGS ||--o{ DIET_LOG_ITEMS : contains
+    USERS ||--|| DIET_GOALS : targets
 ```
 
-Production secrets should always be supplied through environment variables.
+| Domain | Tables |
+| --- | --- |
+| Identity | `users`, `user_profiles` |
+| Training | `exercises`, `routines`, `routine_exercises`, `workouts`, `workout_exercises`, `workout_sets` |
+| Facilities | `gyms`, `gym_slots`, `bookings` |
+| Nutrition | `foods`, `food_servings`, `custom_foods`, `meals`, `meal_items`, `diet_logs`, `diet_log_items`, `diet_goals` |
 
----
+Important constraints and lifecycle rules:
 
-## Repository
+- `routine_exercises` is unique by routine/exercise; exercise ordering and target set count are stored on the association.
+- `user_profiles` is unique by `(user_id, version)`, allowing profile history.
+- `diet_goals.user_id` is unique, producing one current target set per user.
+- Custom foods and saved meals use `is_active` soft deletion so old logs remain meaningful.
+- Routine/workout children, gym slots/bookings, food servings, meal items, and diet-log items use ORM cascade deletion as appropriate.
 
-**GitHub**
+## Seed and import data
 
-https://github.com/PritishaPaul0507/LiftLog
+At ordinary development startup, the backend seeds the demo user (`demo@liftlog.app`), exercises from `FE/exercises-data.js`, and fallback exercises if that file cannot be read. It also creates two sample routines for the demo user when none exist.
 
----
+Optional spreadsheet importers expect source workbooks beneath `BE/Temp/` (the directory is intentionally ignored):
 
-## Author
+```bash
+# Run from the repository root with the virtual environment active.
+python3 BE/scripts/import_foods.py
+python3 BE/scripts/import_gyms.py
+```
 
-**Pritisha Paul**
+The food importer reads the two configured Indian food workbooks, deduplicates foods by case-insensitive name, upserts nutrient data, and adds non-duplicate servings. The gym importer reads a `Gyms` sheet (or the active sheet), requires `name`, `address`, `latitude`, and `longitude`, and inserts or updates gyms by name.
 
-Software Developer
+## Testing and development
 
-GitHub:
+Backend tests cover sign-up schema handling, workout storage, diet calculations/validation, profile versioning, gym booking behavior, and the AI coach service/endpoint. Run them from the repository root after installing the backend dependencies and Pytest:
 
-https://github.com/PritishaPaul0507
+```bash
+pytest BE/tests
+```
 
----
+Frontend commands:
 
-## License
+```bash
+cd FE
+npm test
+npm run build
+```
 
-This project is currently intended for portfolio and educational purposes.
+## Operational notes
 
----
-
-Built as a full-stack fitness platform using **Angular + FastAPI**.
+- The default database is SQLite for local development. Set `DATABASE_URL` to use a server database such as PostgreSQL; install the appropriate database driver in the backend environment.
+- Startup migration helpers are deliberately lightweight and cover a few legacy columns/indexes. Use a proper migration workflow before making production schema changes.
+- Daily API logs can be written to `BE/logs/liftlog.log.YYYY-MM-DD` when `LOG_TO_FILE=true`.
+- The backend logs request method, path, status, elapsed time, and a request ID. In production it returns a generic error payload for unhandled exceptions.
+- `GEMINI_API_KEY` is never optional for an active coach deployment. Treat it, JWT keys, and database credentials as secrets.

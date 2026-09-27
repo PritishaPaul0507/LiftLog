@@ -237,6 +237,41 @@
             </button>
 
 
+            @if (!isCancelled) {
+
+              <button
+                class="reschedule-button"
+                type="button"
+                [disabled]="isCancelling"
+                (click)="rescheduleBooking()"
+              >
+                Reschedule Booking
+              </button>
+
+
+              <button
+                class="cancel-button"
+                type="button"
+                [disabled]="isCancelling"
+                (click)="cancelBooking()"
+              >
+                @if (isCancelling) {
+                  Cancelling…
+                } @else {
+                  Cancel Booking
+                }
+              </button>
+
+
+              @if (actionError) {
+                <p class="action-error">
+                  {{ actionError }}
+                </p>
+              }
+
+            }
+
+
             <button
               class="home-button"
               type="button"

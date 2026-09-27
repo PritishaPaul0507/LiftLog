@@ -42,6 +42,13 @@ export class BookingDetailPage
     false;
 
 
+  isCancelling =
+    false;
+
+  actionError =
+    '';
+
+
   constructor(
     private readonly route:
       ActivatedRoute,
@@ -208,6 +215,104 @@ export class BookingDetailPage
         },
 
       });
+
+  }
+
+
+  cancelBooking(): void {
+
+    if (
+      !this.booking ||
+      this.isCancelled ||
+      this.isCancelling
+    ) {
+      return;
+    }
+
+    const token =
+      localStorage.getItem(
+        'pulseos_access_token',
+      );
+
+    if (!token) {
+      this.actionError =
+        'Your session has expired. Please sign in again.';
+
+      this.changeDetector
+        .detectChanges();
+
+      return;
+    }
+
+    this.isCancelling =
+      true;
+
+    this.actionError =
+      '';
+
+    this.changeDetector
+      .detectChanges();
+
+    this.liftlogApi
+      .cancelBooking(
+        token,
+        this.bookingId,
+      )
+      .subscribe({
+
+        next: () => {
+
+          this.isCancelling =
+            false;
+
+          this.loadBooking();
+
+        },
+
+        error: error => {
+
+          console.error(
+            'Unable to cancel booking:',
+            error,
+          );
+
+          this.isCancelling =
+            false;
+
+          this.actionError =
+            'Could not cancel this booking. Please try again.';
+
+          this.changeDetector
+            .detectChanges();
+
+        },
+
+      });
+
+  }
+
+
+  rescheduleBooking(): void {
+
+    if (
+      !this.booking ||
+      this.isCancelled
+    ) {
+      return;
+    }
+
+    this.router.navigate(
+      [
+        '/gyms',
+        this.booking.gym.gym_id,
+      ],
+      {
+        queryParams: {
+          rescheduleBookingId:
+            this.bookingId,
+        },
+      },
+    );
 
   }
 

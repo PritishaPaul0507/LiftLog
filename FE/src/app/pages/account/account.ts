@@ -15,7 +15,6 @@ import {
 import {
   LiftlogApiService,
   UserProfile,
-  UserPublic,
 } from '../../services/liftlog-api.service';
 
 
@@ -42,7 +41,6 @@ type EditableProfileField =
 })
 export class Account implements OnInit {
 
-  user: UserPublic | null = null;
 
   profile: UserProfile | null = null;
 
@@ -425,91 +423,7 @@ export class Account implements OnInit {
   }
 
 
-  /* =====================================================
-     USER
-  ===================================================== */
 
-  get initials(): string {
-
-    const name =
-      this.user
-        ?.full_name
-        ?.trim();
-
-
-    if (name) {
-
-      const words =
-        name
-          .split(/\s+/)
-          .filter(Boolean);
-
-
-      if (
-        words.length >= 2
-      ) {
-
-        return (
-          words[0][0] +
-          words[
-            words.length - 1
-          ][0]
-        ).toUpperCase();
-
-      }
-
-
-      return name
-        .slice(0, 2)
-        .toUpperCase();
-
-    }
-
-
-    const email =
-      this.user
-        ?.email
-        ?.trim();
-
-
-    if (email) {
-
-      return email
-        .slice(0, 2)
-        .toUpperCase();
-
-    }
-
-
-    return 'P';
-
-  }
-
-
-  get accountName(): string {
-
-    const name =
-      this.user
-        ?.full_name
-        ?.trim();
-
-
-    return (
-      name ||
-      'PulseOS User'
-    );
-
-  }
-
-
-  get email(): string {
-
-    return (
-      this.user?.email ||
-      'Not set'
-    );
-
-  }
 
 
   /* =====================================================

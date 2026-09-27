@@ -197,8 +197,6 @@
       </section>
 
 
-
-
       <!-- ==================================================
            MY BOOKINGS
       =================================================== -->
@@ -211,21 +209,14 @@
             My Bookings
           </h2>
 
-
           @if (hasMoreBookings) {
-
             <button
               class="text-action"
               type="button"
               (click)="toggleAllBookings()"
             >
-              @if (showAllBookings) {
-                Show Less
-              } @else {
-                View All
-              }
+              {{ showAllBookings ? 'Show Less' : 'View All' }}
             </button>
-
           }
 
         </div>
@@ -233,55 +224,36 @@
 
         @if (isLoadingBookings) {
 
-          <div class="booking-list-card booking-state-card">
-
+          <div class="bookings-state-card">
             <span class="activity-loader"></span>
-
-            <span>
-              Loading your bookings...
-            </span>
-
+            <span>Loading your bookings...</span>
           </div>
 
         } @else if (bookingsError) {
 
-          <div class="booking-list-card booking-empty-card">
+          <div class="bookings-state-card bookings-error-state">
+            <span class="booking-state-icon">📅</span>
 
-            <div class="booking-empty-icon">
-              🗓️
+            <div>
+              <strong>Unable to load bookings</strong>
+              <span>{{ bookingsError }}</span>
             </div>
-
-            <strong>
-              Unable to load bookings
-            </strong>
-
-            <span>
-              {{ bookingsError }}
-            </span>
-
           </div>
 
         } @else if (myBookings.length === 0) {
 
-          <div class="booking-list-card booking-empty-card">
+          <div class="bookings-state-card">
+            <span class="booking-state-icon">📅</span>
 
-            <div class="booking-empty-icon">
-              🗓️
+            <div>
+              <strong>No bookings yet</strong>
+              <span>Your booked gym sessions will appear here.</span>
             </div>
-
-            <strong>
-              No bookings yet
-            </strong>
-
-            <span>
-              Your booked gym sessions will appear here.
-            </span>
-
           </div>
 
         } @else {
 
-          <div class="booking-list-card">
+          <div class="booking-list">
 
             @for (
               booking of visibleBookings;
@@ -289,55 +261,42 @@
             ) {
 
               <button
-                class="booking-row"
+                class="booking-card"
                 type="button"
                 (click)="openBooking(booking.bookingId)"
               >
 
-                <div
-                  class="booking-thumbnail"
-                  [class.placeholder]="
-                    !booking.imageUrl ||
-                    failedBookingImages.has(booking.bookingId)
-                  "
-                >
+                <div class="booking-card-image">
 
                   @if (
                     booking.imageUrl &&
                     !failedBookingImages.has(booking.bookingId)
                   ) {
-
                     <img
                       [src]="booking.imageUrl"
                       [alt]="booking.gymName"
-                      loading="lazy"
                       (error)="onBookingImageError(booking.bookingId)"
-                    >
-
+                    />
                   } @else {
-
-                    <span aria-hidden="true">
-                      🏋️
-                    </span>
-
+                    <span aria-hidden="true">🏋️</span>
                   }
 
                 </div>
 
 
-                <div class="booking-copy">
+                <div class="booking-card-copy">
 
-                  <div class="booking-title-row">
+                  <div class="booking-card-title-row">
 
-                    <strong>
+                    <strong class="booking-gym-name">
                       {{ booking.gymName }}
                     </strong>
-
 
                     <span
                       class="booking-status"
                       [class]="
                         'booking-status ' +
+                        'booking-status-' +
                         booking.statusClass
                       "
                     >
@@ -347,20 +306,13 @@
                   </div>
 
 
-                  <div class="booking-meta">
+                  <span class="booking-date">
+                    {{ booking.dateLabel }}
+                  </span>
 
-                    <span>
-                      🗓️
-                      {{ booking.dateLabel }}
-                    </span>
-
-
-                    <span>
-                      🕐
-                      {{ booking.timeLabel }}
-                    </span>
-
-                  </div>
+                  <span class="booking-time">
+                    {{ booking.timeLabel }}
+                  </span>
 
                 </div>
 
@@ -381,6 +333,7 @@
         }
 
       </section>
+
 
       <!-- ==================================================
            RECENT ACTIVITY
@@ -545,6 +498,7 @@
         <div class="weight-tracker-heading">
 
           <div>
+
             <span class="weight-tracker-kicker">
               YOUR JOURNEY
             </span>
@@ -552,6 +506,7 @@
             <h2>
               Progress Over Time
             </h2>
+
           </div>
 
 
@@ -567,6 +522,7 @@
           <div class="weight-chart-top">
 
             <div class="weight-chart-metric">
+
               <span class="weight-chart-icon">
                 ⚖️
               </span>
@@ -574,17 +530,34 @@
               <span>
                 Weight
               </span>
+
             </div>
 
 
-            <div class="weight-chart-current">
-              <strong>
-                {{ formatWeight(latestTrackedWeight) }} kg
-              </strong>
+            <div class="weight-chart-actions">
 
-              <span>
-                CURRENT
-              </span>
+              <div class="weight-chart-current">
+
+                <strong>
+                  {{ formatWeight(latestTrackedWeight) }} kg
+                </strong>
+
+                <span>
+                  CURRENT
+                </span>
+
+              </div>
+
+
+              <button
+                class="weight-add-button"
+                type="button"
+                aria-label="Log weight"
+                (click)="openWeightLogger()"
+              >
+                +
+              </button>
+
             </div>
 
           </div>
@@ -603,7 +576,7 @@
               </strong>
 
               <span>
-                Add your weight in your account details to begin tracking progress.
+                Tap + to log your first weight and begin tracking progress.
               </span>
 
             </div>
@@ -613,6 +586,7 @@
             <div class="weight-chart-wrap">
 
               <div class="weight-axis-labels">
+
                 <span>
                   {{ weightChartMax }}
                 </span>
@@ -624,6 +598,7 @@
                 <span>
                   {{ weightChartMin }}
                 </span>
+
               </div>
 
 
@@ -635,6 +610,7 @@
               >
 
                 <defs>
+
                   <linearGradient
                     id="weightAreaGradient"
                     x1="0"
@@ -642,6 +618,7 @@
                     x2="0"
                     y2="1"
                   >
+
                     <stop
                       offset="0%"
                       stop-color="#70d9a5"
@@ -653,7 +630,9 @@
                       stop-color="#70d9a5"
                       stop-opacity="0.02"
                     />
+
                   </linearGradient>
+
                 </defs>
 
 
@@ -695,6 +674,7 @@
 
 
                 @if (latestWeightPoint; as point) {
+
                   <circle
                     class="weight-latest-halo"
                     [attr.cx]="point.x"
@@ -708,10 +688,15 @@
                     [attr.cy]="point.y"
                     r="3.5"
                   />
+
                 }
 
 
-                @for (label of weightChartLabels; track label.label) {
+                @for (
+                  label of weightChartLabels;
+                  track label.label
+                ) {
+
                   <text
                     class="weight-date-label"
                     [attr.x]="label.x"
@@ -720,6 +705,7 @@
                   >
                     {{ label.label }}
                   </text>
+
                 }
 
               </svg>
@@ -730,13 +716,15 @@
             <div class="weight-chart-footer">
 
               <div>
+
                 <span>
-                  Started
+                  Start
                 </span>
 
                 <strong>
                   {{ formatWeight(firstTrackedWeight) }} kg
                 </strong>
+
               </div>
 
 
@@ -744,6 +732,7 @@
 
 
               <div>
+
                 <span>
                   Current
                 </span>
@@ -751,6 +740,23 @@
                 <strong>
                   {{ formatWeight(latestTrackedWeight) }} kg
                 </strong>
+
+              </div>
+
+
+              <div class="weight-chart-footer-divider"></div>
+
+
+              <div>
+
+                <span>
+                  Change
+                </span>
+
+                <strong class="weight-change-value">
+                  {{ formatWeightChange() }}
+                </strong>
+
               </div>
 
             </div>
@@ -874,7 +880,6 @@
             Settings
           </h2>
 
-
           <p>
             Customize your PulseOS experience.
           </p>
@@ -896,8 +901,10 @@
 
       <div class="settings-modal-list">
 
-
-        <!-- APPEARANCE -->
+        <!--
+        =====================================================
+        APPEARANCE - TEMPORARILY DISABLED
+        =====================================================
 
         <button
           class="settings-modal-row"
@@ -908,7 +915,6 @@
           <span class="settings-modal-icon">
             ☀️
           </span>
-
 
           <span class="settings-modal-copy">
 
@@ -922,12 +928,13 @@
 
           </span>
 
-
           <span class="settings-modal-chevron">
             ›
           </span>
 
         </button>
+
+        -->
 
 
         <!-- ACCOUNT -->
@@ -942,7 +949,6 @@
             👤
           </span>
 
-
           <span class="settings-modal-copy">
 
             <strong>
@@ -954,73 +960,6 @@
             </small>
 
           </span>
-
-
-          <span class="settings-modal-chevron">
-            ›
-          </span>
-
-        </button>
-
-
-        <!-- NOTIFICATIONS -->
-
-        <button
-          class="settings-modal-row"
-          type="button"
-          (click)="openNotifications()"
-        >
-
-          <span class="settings-modal-icon">
-            🔔
-          </span>
-
-
-          <span class="settings-modal-copy">
-
-            <strong>
-              Notifications
-            </strong>
-
-            <small>
-              Workout reminders and updates
-            </small>
-
-          </span>
-
-
-          <span class="settings-modal-chevron">
-            ›
-          </span>
-
-        </button>
-
-
-        <!-- PRIVACY -->
-
-        <button
-          class="settings-modal-row"
-          type="button"
-          (click)="openPrivacy()"
-        >
-
-          <span class="settings-modal-icon">
-            🛡️
-          </span>
-
-
-          <span class="settings-modal-copy">
-
-            <strong>
-              Privacy
-            </strong>
-
-            <small>
-              Manage your data
-            </small>
-
-          </span>
-
 
           <span class="settings-modal-chevron">
             ›
@@ -1041,7 +980,6 @@
             ❔
           </span>
 
-
           <span class="settings-modal-copy">
 
             <strong>
@@ -1053,7 +991,6 @@
             </small>
 
           </span>
-
 
           <span class="settings-modal-chevron">
             ›
@@ -1074,7 +1011,6 @@
             ⓘ
           </span>
 
-
           <span class="settings-modal-copy">
 
             <strong>
@@ -1086,7 +1022,6 @@
             </small>
 
           </span>
-
 
           <span class="settings-modal-chevron">
             ›
@@ -1105,6 +1040,193 @@
           (click)="logout()"
         >
           Log Out
+        </button>
+
+      </div>
+
+    </section>
+
+  </div>
+
+}
+
+
+<!-- ========================================================
+     LOG WEIGHT BOTTOM SHEET
+========================================================= -->
+
+@if (showWeightLogger) {
+
+  <div
+    class="weight-logger-backdrop"
+    (click)="closeWeightLogger()"
+  >
+
+    <section
+      class="weight-logger-sheet"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="weightLoggerTitle"
+      (click)="$event.stopPropagation()"
+    >
+
+      <div class="weight-logger-handle"></div>
+
+
+      <div class="weight-logger-heading">
+
+        <h2 id="weightLoggerTitle">
+          Log Weight
+        </h2>
+
+        <p>
+          Track your progress over time.
+        </p>
+
+      </div>
+
+
+      <div class="weight-logger-meta">
+
+        <div>
+
+          <strong>
+            Today's weight
+          </strong>
+
+          <span>
+            You can update this anytime.
+          </span>
+
+        </div>
+
+
+        <span class="weight-date-pill">
+          📅 Today, {{ todayWeightLabel }}
+        </span>
+
+      </div>
+
+
+      <div class="weight-wheel-stage">
+
+        <div class="weight-wheel-highlight"></div>
+
+
+        <div class="weight-wheel-columns">
+
+          <select
+            class="weight-wheel-select"
+            size="5"
+            aria-label="Weight whole number"
+            [(ngModel)]="selectedWeightWhole"
+            [disabled]="isSavingWeight"
+          >
+
+            @for (
+              value of weightWholeOptions;
+              track value
+            ) {
+
+              <option
+                [ngValue]="value"
+              >
+                {{ value }}
+              </option>
+
+            }
+
+          </select>
+
+
+          <span class="weight-wheel-dot">
+            .
+          </span>
+
+
+          <select
+            class="weight-wheel-select weight-wheel-decimal"
+            size="5"
+            aria-label="Weight decimal"
+            [(ngModel)]="selectedWeightDecimal"
+            [disabled]="isSavingWeight"
+          >
+
+            @for (
+              value of weightDecimalOptions;
+              track value
+            ) {
+
+              <option
+                [ngValue]="value"
+              >
+                {{ value }}
+              </option>
+
+            }
+
+          </select>
+
+        </div>
+
+      </div>
+
+
+      <div class="weight-unit-toggle">
+
+        <button
+          type="button"
+          [class.active]="weightUnit === 'kg'"
+          [disabled]="isSavingWeight"
+          (click)="selectWeightUnit('kg')"
+        >
+          Kg
+        </button>
+
+        <button
+          type="button"
+          [class.active]="weightUnit === 'lb'"
+          [disabled]="isSavingWeight"
+          (click)="selectWeightUnit('lb')"
+        >
+          Lb
+        </button>
+
+      </div>
+
+
+      @if (weightSaveError) {
+
+        <div class="weight-save-error">
+          {{ weightSaveError }}
+        </div>
+
+      }
+
+
+      <div class="weight-logger-actions">
+
+        <button
+          class="weight-cancel-button"
+          type="button"
+          [disabled]="isSavingWeight"
+          (click)="closeWeightLogger()"
+        >
+          Cancel
+        </button>
+
+
+        <button
+          class="weight-save-button"
+          type="button"
+          [disabled]="isSavingWeight"
+          (click)="saveLoggedWeight()"
+        >
+          @if (isSavingWeight) {
+            Saving...
+          } @else {
+            Save Weight
+          }
         </button>
 
       </div>

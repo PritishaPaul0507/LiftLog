@@ -13,6 +13,7 @@ import {
 } from '@angular/common/http';
 
 import {
+  ActivatedRoute,
   Router,
 } from '@angular/router';
 
@@ -79,6 +80,9 @@ implements OnInit {
   nutritionLoadError = false;
   isSavingFood = false;
   foodSaveError = '';
+
+  selectedDate = '';
+  showDatePicker = false;
 
   showGoalModal = false;
 
@@ -216,6 +220,9 @@ implements OnInit {
     private router:
       Router,
 
+    private route:
+      ActivatedRoute,
+
     private nutritionService:
       NutritionService,
 
@@ -225,6 +232,16 @@ implements OnInit {
 
 
   ngOnInit(): void {
+    const requestedDate =
+      this.route.snapshot
+        .queryParamMap
+        .get('date');
+
+    this.selectedDate =
+      this.isValidSelectableDate(requestedDate)
+        ? requestedDate
+        : this.todayApiDate;
+
     this.loadNutritionData();
   }
 
@@ -291,6 +308,7 @@ implements OnInit {
 
   private loadLogs(): void {
     const date =
+      this.selectedDate ||
       this.todayApiDate;
 
     console.log(
@@ -361,6 +379,76 @@ implements OnInit {
 
 
   /* =====================================================
+     FRONTEND SNACK SECTION MEMORY
+  ===================================================== */
+
+  private get snackSectionStorageKey(): string {
+    return `pulseos_snack_sections_${this.selectedDate || this.todayApiDate}`;
+  }
+
+  private getSnackAssignments(
+    itemCount: number,
+  ): Array<'morning' | 'evening'> {
+    let assignments: Array<'morning' | 'evening'> = [];
+
+    try {
+      const raw = localStorage.getItem(
+        this.snackSectionStorageKey,
+      );
+
+      const parsed = raw
+        ? JSON.parse(raw)
+        : [];
+
+      if (Array.isArray(parsed)) {
+        assignments = parsed.filter(
+          (
+            value: unknown,
+          ): value is 'morning' | 'evening' =>
+            value === 'morning' ||
+            value === 'evening',
+        );
+      }
+    }
+    catch {
+      assignments = [];
+    }
+
+    // The backend only stores "snack". Older snack records therefore
+    // have no morning/evening distinction. Keep them visible by
+    // assigning unmatched old records to Morning Snack.
+    while (
+      assignments.length <
+      itemCount
+    ) {
+      assignments.push(
+        'morning',
+      );
+    }
+
+    if (
+      assignments.length >
+      itemCount
+    ) {
+      assignments =
+        assignments.slice(
+          0,
+          itemCount,
+        );
+    }
+
+    localStorage.setItem(
+      this.snackSectionStorageKey,
+      JSON.stringify(
+        assignments,
+      ),
+    );
+
+    return assignments;
+  }
+
+
+  /* =====================================================
      APPLY LOG
   ===================================================== */
 
@@ -375,7 +463,6 @@ implements OnInit {
       )
     ) {
       this.resetNutritionForEmptyDay();
-
       return;
     }
 
@@ -384,19 +471,133 @@ implements OnInit {
     let totalCarbs = 0;
     let totalFats = 0;
 
-    const updatedMeals:
-      MealSection[] =
+    // Calculate totals directly from backend meals exactly once.
+    // This avoids counting the backend "snack" meal twice.
+    for (
+      const apiMeal of
+      log.meals
+    ) {
+      totalCalories +=
+        this.safeNumber(
+          apiMeal.nutrition
+            ?.calories,
+        );
+
+      totalProtein +=
+        this.safeNumber(
+          apiMeal.nutrition
+            ?.protein_g,
+        );
+
+      totalCarbs +=
+        this.safeNumber(
+          apiMeal.nutrition
+            ?.carbs_g,
+        );
+
+      totalFats +=
+        this.safeNumber(
+          apiMeal.nutrition
+            ?.fat_g,
+        );
+    }
+
+    const snackMeal =
+      log.meals.find(
+        apiMeal =>
+          this.normalizeMealName(
+            apiMeal.meal_name,
+          ) === 'snack',
+      );
+
+    const snackItems:
+      DietLogItem[] =
+      snackMeal &&
+      Array.isArray(
+        snackMeal.items,
+      )
+        ? [
+            ...snackMeal.items,
+          ]
+        : [];
+
+    const snackAssignments =
+      this.getSnackAssignments(
+        snackItems.length,
+      );
+
+    const morningSnackItems =
+      snackItems.filter(
+        (
+          _item,
+          index,
+        ) =>
+          snackAssignments[
+            index
+          ] !== 'evening',
+      );
+
+    const eveningSnackItems =
+      snackItems.filter(
+        (
+          _item,
+          index,
+        ) =>
+          snackAssignments[
+            index
+          ] === 'evening',
+      );
+
+    this.meals =
       this.meals.map(
         mealSection => {
+          const sectionName =
+            this.normalizeMealName(
+              mealSection.name,
+            );
+
+          if (
+            sectionName ===
+              'morning snack' ||
+            sectionName ===
+              'evening snack'
+          ) {
+            const items =
+              sectionName ===
+              'evening snack'
+                ? eveningSnackItems
+                : morningSnackItems;
+
+            const eatenCalories =
+              items.reduce(
+                (
+                  total,
+                  item,
+                ) =>
+                  total +
+                  this.safeNumber(
+                    item.calories,
+                  ),
+                0,
+              );
+
+            return {
+              ...mealSection,
+              eatenCalories:
+                Math.round(
+                  eatenCalories,
+                ),
+              items,
+            };
+          }
+
           const matchingMeal =
             log.meals.find(
               apiMeal =>
                 this.normalizeMealName(
                   apiMeal.meal_name,
                 ) ===
-                this.normalizeMealName(
-                  mealSection.name,
-                ),
+                sectionName,
             );
 
           if (
@@ -409,36 +610,15 @@ implements OnInit {
             };
           }
 
-          const nutrition =
-            matchingMeal.nutrition;
-
-          const eatenCalories =
-            this.safeNumber(
-              nutrition?.calories,
-            );
-
-          totalCalories +=
-            eatenCalories;
-
-          totalProtein +=
-            this.safeNumber(
-              nutrition?.protein_g,
-            );
-
-          totalCarbs +=
-            this.safeNumber(
-              nutrition?.carbs_g,
-            );
-
-          totalFats +=
-            this.safeNumber(
-              nutrition?.fat_g,
-            );
-
           return {
             ...mealSection,
 
-            eatenCalories,
+            eatenCalories:
+              this.safeNumber(
+                matchingMeal
+                  .nutrition
+                  ?.calories,
+              ),
 
             items:
               Array.isArray(
@@ -451,9 +631,6 @@ implements OnInit {
           };
         },
       );
-
-    this.meals =
-      updatedMeals;
 
     this.caloriesEaten =
       Math.round(
@@ -474,26 +651,6 @@ implements OnInit {
       this.roundMacro(
         totalFats,
       );
-
-    console.log(
-      'Healthify diet log applied:',
-      {
-        caloriesEaten:
-          this.caloriesEaten,
-
-        protein:
-          this.protein,
-
-        carbs:
-          this.carbs,
-
-        fats:
-          this.fats,
-
-        meals:
-          this.meals,
-      },
-    );
   }
 
 
@@ -903,14 +1060,21 @@ implements OnInit {
       this.pendingDeleteMeal;
 
     const itemIndex =
-      this.pendingDeleteItemIndex;
+  this.pendingDeleteItemIndex;
 
-    const payload =
-      this.buildModifiedLogPayload(
-        meal.name,
-        itemIndex,
-        'delete',
-      );
+const snackBackendIndex =
+  this.getSnackBackendIndex(
+    meal.name,
+    itemIndex,
+  );
+
+const payload =
+  this.buildModifiedLogPayload(
+    meal.name,
+    itemIndex,
+    'delete',
+  );
+      
 
     if (
       !payload
@@ -940,12 +1104,28 @@ implements OnInit {
           response:
             DietLogResponse,
         ) => {
-          this.currentLog =
-            response;
+          const normalizedMeal =
+  this.normalizeMealName(
+    meal.name,
+  );
 
-          this.applyDietLog(
-            response,
-          );
+if (
+  normalizedMeal ===
+    'morning snack' ||
+  normalizedMeal ===
+    'evening snack'
+) {
+  this.removeSnackAssignment(
+    snackBackendIndex,
+  );
+}
+
+this.currentLog =
+  response;
+
+this.applyDietLog(
+  response,
+);
 
           this.isDeletingFood =
             false;
@@ -1020,102 +1200,271 @@ implements OnInit {
   }
 
 
-  private buildModifiedLogPayload(
-    mealName:
-      string,
+ private buildModifiedLogPayload(
+  mealName: string,
+  itemIndex: number,
+  operation: 'edit' | 'delete',
+  quantity?: number,
+): DietLogRequest | null {
 
-    itemIndex:
-      number,
+  if (!this.currentLog) {
+    return null;
+  }
 
-    operation:
-      'edit' |
-      'delete',
+  const normalizedTarget =
+    this.normalizeMealName(mealName);
 
-    quantity?:
-      number,
-  ):
-    DietLogRequest | null {
-    if (
-      !this.currentLog
-    ) {
+  const isSnackSection =
+    normalizedTarget === 'morning snack' ||
+    normalizedTarget === 'evening snack';
+
+  /*
+   * Morning Snack + Evening Snack both exist in the
+   * backend as one meal_type: "snack".
+   *
+   * The index displayed in either frontend section is
+   * NOT necessarily the same index in backend snack.items.
+   */
+  let backendItemIndex = itemIndex;
+
+  if (isSnackSection) {
+
+    const snackMeal =
+      this.currentLog.meals.find(
+        meal =>
+          this.normalizeMealName(
+            meal.meal_name,
+          ) === 'snack',
+      );
+
+    if (!snackMeal) {
       return null;
     }
 
-    const targetMealName =
-      this.normalizeMealName(
-        mealName,
+    const assignments =
+      this.getSnackAssignments(
+        snackMeal.items.length,
       );
 
-    const requestMeals =
-      this.currentLog.meals
+    const wantedSection:
+      'morning' | 'evening' =
+      normalizedTarget === 'evening snack'
+        ? 'evening'
+        : 'morning';
+
+    const matchingBackendIndexes =
+      assignments
         .map(
-          meal => {
-            let items =
-              meal.items.map(
-                item =>
-                  this.convertExistingItemToRequest(
-                    item,
-                  ),
-              );
-
-            if (
-              this.normalizeMealName(
-                meal.meal_name,
-              ) ===
-              targetMealName
-            ) {
-              if (
-                operation ===
-                'delete'
-              ) {
-                items =
-                  items.filter(
-                    (
-                      _item,
-                      index,
-                    ) =>
-                      index !==
-                      itemIndex,
-                  );
-              }
-              else if (
-                operation ===
-                  'edit' &&
-                items[itemIndex]
-              ) {
-                items[itemIndex] = {
-                  ...items[itemIndex],
-
-                  quantity_g:
-                    this.safeNumber(
-                      quantity,
-                    ),
-                };
-              }
-            }
-
-            return {
-              meal_type:
-                meal.meal_name,
-
-              items,
-            };
-          },
+          (section, index) => ({
+            section,
+            index,
+          }),
         )
         .filter(
-          meal =>
-            meal.items.length > 0,
+          entry =>
+            entry.section === wantedSection,
+        )
+        .map(
+          entry => entry.index,
         );
 
-    return {
-      date:
-        this.todayApiDate,
+    backendItemIndex =
+      matchingBackendIndexes[itemIndex];
 
-      meals:
-        requestMeals,
-    };
+    if (
+      backendItemIndex === undefined
+    ) {
+      return null;
+    }
   }
 
+  const backendTargetMeal =
+    isSnackSection
+      ? 'snack'
+      : normalizedTarget;
+
+  const requestMeals =
+    this.currentLog.meals
+      .map(
+        meal => {
+
+          let items =
+            meal.items.map(
+              item =>
+                this.convertExistingItemToRequest(
+                  item,
+                ),
+            );
+
+          const currentMealName =
+            this.normalizeMealName(
+              meal.meal_name,
+            );
+
+          if (
+            currentMealName ===
+            backendTargetMeal
+          ) {
+
+            if (
+              operation === 'delete'
+            ) {
+
+              items =
+                items.filter(
+                  (_item, index) =>
+                    index !==
+                    backendItemIndex,
+                );
+
+            }
+            else if (
+              operation === 'edit' &&
+              items[backendItemIndex]
+            ) {
+
+              items[backendItemIndex] = {
+                ...items[backendItemIndex],
+
+                quantity_g:
+                  this.safeNumber(
+                    quantity,
+                  ),
+              };
+
+            }
+          }
+
+          return {
+            meal_type:
+              currentMealName,
+
+            items,
+          };
+        },
+      )
+      .filter(
+        meal =>
+          meal.items.length > 0,
+      );
+
+  return {
+    date:
+      this.selectedDate ||
+      this.todayApiDate,
+
+    meals:
+      requestMeals,
+  };
+}
+private getSnackBackendIndex(
+  mealName: string,
+  sectionItemIndex: number,
+): number {
+
+  if (!this.currentLog) {
+    return -1;
+  }
+
+  const normalized =
+    this.normalizeMealName(
+      mealName,
+    );
+
+  if (
+    normalized !== 'morning snack' &&
+    normalized !== 'evening snack'
+  ) {
+    return sectionItemIndex;
+  }
+
+  const snackMeal =
+    this.currentLog.meals.find(
+      meal =>
+        this.normalizeMealName(
+          meal.meal_name,
+        ) === 'snack',
+    );
+
+  if (!snackMeal) {
+    return -1;
+  }
+
+  const assignments =
+    this.getSnackAssignments(
+      snackMeal.items.length,
+    );
+
+  const wantedSection:
+    'morning' | 'evening' =
+    normalized === 'evening snack'
+      ? 'evening'
+      : 'morning';
+
+  const indexes =
+    assignments
+      .map(
+        (section, index) => ({
+          section,
+          index,
+        }),
+      )
+      .filter(
+        entry =>
+          entry.section ===
+          wantedSection,
+      )
+      .map(
+        entry => entry.index,
+      );
+
+  return (
+    indexes[sectionItemIndex] ??
+    -1
+  );
+}
+
+
+private removeSnackAssignment(
+  backendItemIndex: number,
+): void {
+
+  if (
+    backendItemIndex < 0 ||
+    !this.currentLog
+  ) {
+    return;
+  }
+
+  const snackMeal =
+    this.currentLog.meals.find(
+      meal =>
+        this.normalizeMealName(
+          meal.meal_name,
+        ) === 'snack',
+    );
+
+  if (!snackMeal) {
+    return;
+  }
+
+  const assignments =
+    this.getSnackAssignments(
+      snackMeal.items.length,
+    );
+
+  assignments.splice(
+    backendItemIndex,
+    1,
+  );
+
+  localStorage.setItem(
+    this.snackSectionStorageKey,
+    JSON.stringify(
+      assignments,
+    ),
+  );
+}
 
   /* =====================================================
      HELPERS
@@ -1232,7 +1581,7 @@ implements OnInit {
   }
 
 
-  private get todayApiDate():
+  get todayApiDate():
     string {
     const today =
       new Date();
@@ -1264,23 +1613,182 @@ implements OnInit {
 
   get todayLabel():
     string {
+    return this.formatDisplayDate(
+      this.selectedDate ||
+      this.todayApiDate,
+    );
+  }
+
+
+  get selectedDateTitle():
+    string {
+    const selected =
+      this.selectedDate ||
+      this.todayApiDate;
+
+    if (selected === this.todayApiDate) {
+      return 'Today';
+    }
+
+    const yesterday =
+      new Date();
+
+    yesterday.setDate(
+      yesterday.getDate() - 1,
+    );
+
+    if (
+      selected ===
+      this.toApiDate(yesterday)
+    ) {
+      return 'Yesterday';
+    }
+
     return new Intl.DateTimeFormat(
       'en-US',
       {
-        weekday:
-          'short',
-
-        day:
-          'numeric',
-
-        month:
-          'short',
-
-        year:
-          'numeric',
+        month: 'short',
+        day: 'numeric',
       },
     ).format(
-      new Date(),
+      this.parseApiDate(selected),
+    );
+  }
+
+
+  toggleDatePicker(): void {
+    this.showDatePicker =
+      !this.showDatePicker;
+  }
+
+
+  closeDatePicker(): void {
+    this.showDatePicker =
+      false;
+  }
+
+
+  selectNutritionDate(
+    value:
+      string,
+  ): void {
+    if (
+      !this.isValidSelectableDate(value)
+    ) {
+      return;
+    }
+
+    this.selectedDate =
+      value;
+
+    this.showDatePicker =
+      false;
+
+    this.currentLog =
+      null;
+
+    this.resetNutritionForEmptyDay();
+
+    this.router.navigate(
+      [],
+      {
+        relativeTo:
+          this.route,
+
+        queryParams: {
+          date:
+            value === this.todayApiDate
+              ? null
+              : value,
+        },
+
+        queryParamsHandling:
+          'merge',
+
+        replaceUrl:
+          true,
+      },
+    );
+
+    this.isLoadingNutrition =
+      true;
+
+    this.nutritionLoadError =
+      false;
+
+    this.loadLogs();
+  }
+
+
+  private isValidSelectableDate(
+    value:
+      string | null,
+  ): value is string {
+    if (
+      !value ||
+      !/^\d{4}-\d{2}-\d{2}$/.test(value)
+    ) {
+      return false;
+    }
+
+    const parsed =
+      this.parseApiDate(value);
+
+    return (
+      !Number.isNaN(parsed.getTime()) &&
+      value <= this.todayApiDate
+    );
+  }
+
+
+  private parseApiDate(
+    value:
+      string,
+  ): Date {
+    const [year, month, day] =
+      value.split('-').map(Number);
+
+    return new Date(
+      year,
+      month - 1,
+      day,
+    );
+  }
+
+
+  private toApiDate(
+    date:
+      Date,
+  ): string {
+    const year =
+      date.getFullYear();
+
+    const month =
+      String(date.getMonth() + 1)
+        .padStart(2, '0');
+
+    const day =
+      String(date.getDate())
+        .padStart(2, '0');
+
+    return `${year}-${month}-${day}`;
+  }
+
+
+  private formatDisplayDate(
+    value:
+      string,
+  ): string {
+    return new Intl.DateTimeFormat(
+      'en-US',
+      {
+        weekday: 'short',
+        day: 'numeric',
+        month: 'short',
+        year: 'numeric',
+      },
+    ).format(
+      this.parseApiDate(value),
     );
   }
 
@@ -1498,6 +2006,10 @@ implements OnInit {
         queryParams: {
           meal:
             meal.name,
+
+          date:
+            this.selectedDate ||
+            this.todayApiDate,
         },
       },
     );

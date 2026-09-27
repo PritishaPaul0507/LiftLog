@@ -124,31 +124,26 @@
             </button>
 
 
-            <p>
-              {{ gym.address }}
-            </p>
+            <p class="gym-address">
+
+  <button
+    class="gym-map-button"
+    type="button"
+    aria-label="Open gym in Google Maps"
+    (click)="openGymMaps($event)"
+  >
+    📍
+  </button>
+
+  <span>
+    {{ gym.address }}
+  </span>
+
+</p>
 
 
-            @if (gym.distance_km !== null) {
-
-              <span class="distance-pill">
-                📍
-                {{ formatDistance(gym.distance_km) }}
-              </span>
-
-            }
-
-
-            <button
-              class="details-link"
-              type="button"
-              (click)="openGymDetails()"
-            >
-              View gym details
-              <span aria-hidden="true">→</span>
-            </button>
-
-          </div>
+            
+</div>
 
         </section>
 
@@ -210,6 +205,29 @@
         </div>
 
       </section>
+
+
+      @if (rescheduleBookingId !== null) {
+
+        <section class="reschedule-notice">
+
+          <strong>
+            Reschedule booking
+          </strong>
+
+          <p>
+            Choose a new available session. Your current booking will only be cancelled after the new booking succeeds.
+          </p>
+
+          @if (rescheduleError) {
+            <p class="reschedule-error">
+              {{ rescheduleError }}
+            </p>
+          }
+
+        </section>
+
+      }
 
 
       <section class="booking-section slots-section">

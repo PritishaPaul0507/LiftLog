@@ -491,157 +491,140 @@ export class Dashboard
 
   confirmDeleteRoutine(): void {
 
-  const routine =
-    this.pendingDeleteRoutine;
+    const routine =
+      this.pendingDeleteRoutine;
 
 
-  if (
-    !routine ||
-    routine.isDeleting
-  ) {
+    if (
+      !routine ||
+      routine.isDeleting
+    ) {
 
-    this.cancelDeleteRoutine();
+      this.cancelDeleteRoutine();
 
-    return;
+      return;
 
-  }
-
-
-  /* =====================================================
-     CLOSE CONFIRMATION
-  ===================================================== */
-
-  this.showDeleteRoutineDialog =
-    false;
+    }
 
 
-  this.pendingDeleteRoutine =
-    null;
+    /* =====================================================
+       CLOSE CONFIRMATION
+    ===================================================== */
+
+    this.showDeleteRoutineDialog =
+      false;
 
 
-  /* =====================================================
-     OPTIMISTIC UI DELETE
-
-     Remove immediately instead of waiting for the API.
-  ===================================================== */
-
-  const originalRoutines =
-    [...this.routines];
+    this.pendingDeleteRoutine =
+      null;
 
 
-  this.routines =
-    this.routines.filter(
-      item =>
-        item.routine_id !==
-        routine.routine_id,
-    );
+    /* =====================================================
+       OPTIMISTIC UI DELETE
+    ===================================================== */
+
+    const originalRoutines =
+      [...this.routines];
 
 
-  this.changeDetector
-    .detectChanges();
+    this.routines =
+      this.routines.filter(
+        item =>
+          item.routine_id !==
+          routine.routine_id,
+      );
 
 
-  /* =====================================================
-     DELETE FROM BACKEND
-  ===================================================== */
+    this.changeDetector
+      .detectChanges();
 
-  this.http
-    .delete<void>(
-      `${this.apiBaseUrl}/routines/${routine.routine_id}`,
-    )
-    .subscribe({
 
-      next: () => {
+    /* =====================================================
+       DELETE FROM BACKEND
+    ===================================================== */
 
-        /*
-         * UI is already updated.
-         * Only clean related local state.
-         */
+    this.http
+      .delete<void>(
+        `${this.apiBaseUrl}/routines/${routine.routine_id}`,
+      )
+      .subscribe({
 
-        const activeRoutineId =
-          localStorage.getItem(
-            this.ACTIVE_ROUTINE_ID_KEY,
+        next: () => {
+
+          const activeRoutineId =
+            localStorage.getItem(
+              this.ACTIVE_ROUTINE_ID_KEY,
+            );
+
+
+          if (
+            activeRoutineId &&
+            Number(
+              activeRoutineId,
+            ) ===
+              routine.routine_id
+          ) {
+
+            localStorage.removeItem(
+              this.ACTIVE_ROUTINE_ID_KEY,
+            );
+
+          }
+
+        },
+
+
+        error: error => {
+
+          console.error(
+            'DELETE routine failed:',
+            error,
           );
 
 
-        if (
-          activeRoutineId &&
-          Number(
-            activeRoutineId,
-          ) ===
-            routine.routine_id
-        ) {
+          if (
+            error.status ===
+            404
+          ) {
 
-          localStorage.removeItem(
-            this.ACTIVE_ROUTINE_ID_KEY,
-          );
+            return;
 
-        }
-
-      },
+          }
 
 
-      error: error => {
-
-        console.error(
-          'DELETE routine failed:',
-          error,
-        );
+          this.routines =
+            originalRoutines;
 
 
-        /*
-         * A 404 means the routine is already gone,
-         * so keep it removed from the UI.
-         */
-
-        if (
-          error.status ===
-          404
-        ) {
-
-          return;
-
-        }
+          this.changeDetector
+            .detectChanges();
 
 
-        /*
-         * Real delete failure:
-         * restore the routine.
-         */
+          if (
+            error.status ===
+            401
+          ) {
 
-        this.routines =
-          originalRoutines;
-
-
-        this.changeDetector
-          .detectChanges();
+            window.alert(
+              'Your session could not be authenticated. Please try again.',
+            );
 
 
-        if (
-          error.status ===
-          401
-        ) {
+            return;
+
+          }
+
 
           window.alert(
-            'Your session could not be authenticated. Please try again.',
+            error.error?.detail ||
+            'Unable to delete this routine. Please try again.',
           );
 
+        },
 
-          return;
+      });
 
-        }
-
-
-        window.alert(
-          error.error?.detail ||
-          'Unable to delete this routine. Please try again.',
-        );
-
-      },
-
-    });
-
-}
+  }
 
 
   /* =====================================================
@@ -868,33 +851,33 @@ export class Dashboard
 
 
   /* =====================================================
-   BOTTOM NAVIGATION
-===================================================== */
+     BOTTOM NAVIGATION
+  ===================================================== */
 
-goToHome(): void {
+  goToHome(): void {
 
-  this.router.navigate([
-    '/home',
-  ]);
+    this.router.navigate([
+      '/home',
+    ]);
 
-}
-
-
-goToHealthify(): void {
-
-  this.router.navigate([
-    '/healthify',
-  ]);
-
-}
+  }
 
 
-goToProfile(): void {
+  goToHealthify(): void {
 
-  this.router.navigate([
-    '/profile',
-  ]);
+    this.router.navigate([
+      '/healthify',
+    ]);
 
-}
+  }
+
+
+  goToProfile(): void {
+
+    this.router.navigate([
+      '/profile',
+    ]);
+
+  }
 
 }

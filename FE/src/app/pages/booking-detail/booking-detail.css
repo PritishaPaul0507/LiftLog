@@ -336,6 +336,8 @@ button {
 }
 
 .directions-button,
+.reschedule-button,
+.cancel-button,
 .home-button {
   width: 100%;
   min-height: 48px;
@@ -363,6 +365,32 @@ button {
 
   background: #e8f8f0;
   color: #087b4b;
+}
+
+.reschedule-button {
+  border: 1px solid #128458;
+  background: #ffffff;
+  color: #087b4b;
+}
+
+.cancel-button {
+  border: 1px solid #f0d1ce;
+  background: #fff3f2;
+  color: #b95550;
+}
+
+.reschedule-button:disabled,
+.cancel-button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.action-error {
+  margin: 2px 0 0;
+  color: #b95550;
+  font-size: 9px;
+  line-height: 1.4;
+  text-align: center;
 }
 
 .home-button {
@@ -486,6 +514,14 @@ button {
 
   .directions-button:hover {
     background: #d9f3e7;
+  }
+
+  .reschedule-button:hover {
+    background: #edf9f3;
+  }
+
+  .cancel-button:hover {
+    background: #ffe9e7;
   }
 
   .home-button:hover {

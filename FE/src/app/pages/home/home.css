@@ -619,32 +619,24 @@ button {
 
 .gym-list {
   display: flex;
+  flex-direction: column;
 
-  gap: 11px;
+  gap: 14px;
 
-  overflow-x: auto;
+  width: 100%;
 
   padding:
     2px
     1px
     8px;
-
-  scrollbar-width: none;
-
-  scroll-snap-type:
-    x mandatory;
-}
-
-.gym-list::-webkit-scrollbar {
-  display: none;
 }
 
 .gym-card {
   appearance: none;
 
-  width: 242px;
+  width: 100%;
 
-  flex: 0 0 242px;
+  flex: 0 0 auto;
 
   overflow: hidden;
 
@@ -665,8 +657,6 @@ button {
     0 8px 24px
     rgba(24, 91, 65, 0.05);
 
-  scroll-snap-align: start;
-
   transition:
     transform 150ms ease,
     border-color 150ms ease,
@@ -675,7 +665,7 @@ button {
 
 .gym-photo {
   width: 100%;
-  height: 115px;
+  height: 170px;
 
   overflow: hidden;
 
@@ -1216,18 +1206,11 @@ button {
 
     padding: 13px;
   }
-
-  .gym-card {
-    width: 222px;
-
-    flex-basis: 222px;
-  }
-
 }
 
 
 /* =========================================================
-   DESKTOP â€” PRESERVE MOBILE/PORTRAIT DESIGN
+   DESKTOP Ã¢â‚¬â€ PRESERVE MOBILE/PORTRAIT DESIGN
 ========================================================= */
 
 @media (min-width: 445px) {

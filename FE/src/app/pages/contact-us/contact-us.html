@@ -1,0 +1,158 @@
+<main class="contact-page">
+
+  <header class="contact-header">
+
+    <button
+      class="back-button"
+      type="button"
+      aria-label="Go back"
+      (click)="goBack()"
+    >
+      ‹
+    </button>
+
+    <div>
+      <span class="header-kicker">
+        HELP & SUPPORT
+      </span>
+
+      <h1>
+        Contact Us
+      </h1>
+    </div>
+
+  </header>
+
+
+  <section class="contact-content">
+
+    <div class="contact-intro">
+
+      <span class="contact-intro-icon">
+        💬
+      </span>
+
+      <div>
+
+        <h2>
+          Send us a message
+        </h2>
+
+        <p>
+          Tell us what you need help with and we'll prepare an email for you.
+        </p>
+
+      </div>
+
+    </div>
+
+
+    <form
+      class="contact-form"
+      (ngSubmit)="sendMessage()"
+    >
+
+      <label>
+        <span>
+          Name
+        </span>
+
+        <input
+          type="text"
+          name="name"
+          [(ngModel)]="name"
+          placeholder="Your name"
+        />
+      </label>
+
+
+      <label>
+        <span>
+          Email
+        </span>
+
+        <input
+          type="email"
+          name="email"
+          [(ngModel)]="email"
+          placeholder="you@example.com"
+        />
+      </label>
+
+
+      <label>
+        <span>
+          What can we help with?
+        </span>
+
+        <select
+          name="topic"
+          [(ngModel)]="topic"
+        >
+          <option>
+            General support
+          </option>
+
+          <option>
+            Account
+          </option>
+
+          <option>
+            Workouts
+          </option>
+
+          <option>
+            Nutrition
+          </option>
+
+          <option>
+            Gym booking
+          </option>
+
+          <option>
+            Report a problem
+          </option>
+        </select>
+      </label>
+
+
+      <label>
+        <span>
+          Message
+        </span>
+
+        <textarea
+          name="message"
+          [(ngModel)]="message"
+          rows="6"
+          placeholder="Describe how we can help..."
+        ></textarea>
+      </label>
+
+
+      @if (formError) {
+
+        <div class="form-error">
+          {{ formError }}
+        </div>
+
+      }
+
+
+      <button
+        class="send-button"
+        type="submit"
+      >
+        Open Email App
+      </button>
+
+
+      <p class="email-note">
+        Your message is prepared on your device and is not sent until you choose to send it from your email app.
+      </p>
+
+    </form>
+
+  </section>
+
+</main>

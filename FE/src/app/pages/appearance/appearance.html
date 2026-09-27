@@ -1,0 +1,153 @@
+<main class="settings-page">
+
+  <header class="settings-page-header">
+
+    <button
+      class="back-button"
+      type="button"
+      aria-label="Go back"
+      (click)="goBack()"
+    >
+      ‹
+    </button>
+
+    <div>
+      <span class="header-kicker">
+        SETTINGS
+      </span>
+
+      <h1>
+        Appearance
+      </h1>
+    </div>
+
+  </header>
+
+
+  <section class="settings-content">
+
+    <div class="intro">
+
+      <span class="intro-icon">
+        ☀️
+      </span>
+
+      <div>
+        <h2>
+          Choose your theme
+        </h2>
+
+        <p>
+          Select how PulseOS looks on your device.
+        </p>
+      </div>
+
+    </div>
+
+
+    <div class="theme-card">
+
+      <button
+        type="button"
+        class="theme-option"
+        [class.selected]="mode === 'light'"
+        (click)="setTheme('light')"
+      >
+
+        <span class="theme-icon">
+          ☀️
+        </span>
+
+        <span class="theme-copy">
+          <strong>
+            Light
+          </strong>
+
+          <small>
+            Always use the light theme
+          </small>
+        </span>
+
+        <span
+          class="radio"
+          [class.active]="mode === 'light'"
+        ></span>
+
+      </button>
+
+
+      <button
+        type="button"
+        class="theme-option"
+        [class.selected]="mode === 'dark'"
+        (click)="setTheme('dark')"
+      >
+
+        <span class="theme-icon">
+          🌙
+        </span>
+
+        <span class="theme-copy">
+          <strong>
+            Dark
+          </strong>
+
+          <small>
+            Easier on your eyes at night
+          </small>
+        </span>
+
+        <span
+          class="radio"
+          [class.active]="mode === 'dark'"
+        ></span>
+
+      </button>
+
+
+      <button
+        type="button"
+        class="theme-option"
+        [class.selected]="mode === 'system'"
+        (click)="setTheme('system')"
+      >
+
+        <span class="theme-icon">
+          ⚙️
+        </span>
+
+        <span class="theme-copy">
+          <strong>
+            System
+          </strong>
+
+          <small>
+            Follow your device appearance
+          </small>
+        </span>
+
+        <span
+          class="radio"
+          [class.active]="mode === 'system'"
+        ></span>
+
+      </button>
+
+    </div>
+
+
+    <div class="current-theme">
+
+      <span>
+        Current appearance
+      </span>
+
+      <strong>
+        {{ resolvedTheme === 'dark' ? 'Dark' : 'Light' }}
+      </strong>
+
+    </div>
+
+  </section>
+
+</main>

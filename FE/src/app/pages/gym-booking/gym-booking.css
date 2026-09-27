@@ -163,6 +163,12 @@ button {
   line-height: 1.45;
 }
 
+.gym-address {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
 .distance-pill {
   display: inline-flex;
   align-items: center;
@@ -176,19 +182,6 @@ button {
   font-weight: 750;
 }
 
-.details-link {
-  display: flex;
-  align-items: center;
-  gap: 7px;
-  margin-top: 14px;
-  padding: 0;
-  border: none;
-  background: transparent;
-  color: #128458;
-  font-size: 10px;
-  font-weight: 800;
-  cursor: pointer;
-}
 
 .booking-section {
   margin-top: 27px;
@@ -476,4 +469,50 @@ button {
   .slot-button:not(.unavailable):hover {
     transform: translateY(-1px);
   }
+}
+
+.reschedule-notice {
+  margin-top: 20px;
+  padding: 14px 15px;
+  border: 1px solid #d8eee4;
+  border-radius: 15px;
+  background: #f1faf6;
+}
+
+.reschedule-notice strong {
+  display: block;
+  color: #10231d;
+  font-size: 12px;
+  font-weight: 850;
+}
+
+.reschedule-notice p {
+  margin: 5px 0 0;
+  color: #6f817a;
+  font-size: 10px;
+  line-height: 1.45;
+}
+
+.reschedule-notice .reschedule-error {
+  color: #b95550;
+  font-weight: 750;
+}
+.gym-map-button {
+  appearance: none;
+  flex: 0 0 auto;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  font: inherit;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.gym-map-button:hover {
+  transform: scale(1.08);
+}
+
+.gym-map-button:active {
+  transform: scale(0.95);
 }

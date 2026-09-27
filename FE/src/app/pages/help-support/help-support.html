@@ -1,0 +1,128 @@
+<main class="support-page">
+
+  <header class="support-header">
+
+    <button
+      class="back-button"
+      type="button"
+      aria-label="Go back"
+      (click)="goBack()"
+    >
+      ‹
+    </button>
+
+    <div>
+      <span class="header-kicker">
+        SETTINGS
+      </span>
+
+      <h1>
+        Help & Support
+      </h1>
+    </div>
+
+  </header>
+
+
+  <section class="support-content">
+
+    <div class="support-hero">
+
+      <span class="hero-icon">
+        ?
+      </span>
+
+      <h2>
+        How can we help?
+      </h2>
+
+      <p>
+        Find answers to common questions or contact us if you need more help.
+      </p>
+
+    </div>
+
+
+    <span class="section-label">
+      FREQUENTLY ASKED QUESTIONS
+    </span>
+
+
+    <div class="faq-card">
+
+      @for (
+        item of questions;
+        track item.question;
+        let index = $index
+      ) {
+
+        <button
+          class="faq-item"
+          type="button"
+          (click)="toggleQuestion(index)"
+        >
+
+          <div class="faq-question">
+
+            <strong>
+              {{ item.question }}
+            </strong>
+
+            <span
+              class="faq-chevron"
+              [class.open]="openQuestion === index"
+            >
+              ›
+            </span>
+
+          </div>
+
+
+          @if (
+            openQuestion === index
+          ) {
+
+            <p class="faq-answer">
+              {{ item.answer }}
+            </p>
+
+          }
+
+        </button>
+
+      }
+
+    </div>
+
+
+    <section class="contact-card">
+
+      <span class="contact-icon">
+        💬
+      </span>
+
+      <div class="contact-copy">
+
+        <strong>
+          Still need help?
+        </strong>
+
+        <span>
+          Send us a message and we'll help you with your issue.
+        </span>
+
+      </div>
+
+      <button
+        class="contact-button"
+        type="button"
+        (click)="openContact()"
+      >
+        Contact Us
+      </button>
+
+    </section>
+
+  </section>
+
+</main>

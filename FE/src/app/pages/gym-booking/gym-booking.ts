@@ -84,6 +84,18 @@ export class GymBooking
     false;
 
 
+  rescheduleBookingId:
+    number |
+    null =
+    null;
+
+  rescheduleError =
+    '';
+
+  isRescheduling =
+    false;
+
+
   constructor(
     private readonly route:
       ActivatedRoute,
@@ -146,6 +158,16 @@ export class GymBooking
           .queryParamMap
           .get(
             'lng',
+          ),
+      );
+
+
+    this.rescheduleBookingId =
+      this.readOptionalPositiveInteger(
+        this.route.snapshot
+          .queryParamMap
+          .get(
+            'rescheduleBookingId',
           ),
       );
 
@@ -454,11 +476,21 @@ export class GymBooking
   ): void {
 
     if (
-      !slot.available
+      !slot.available ||
+      this.isRescheduling
     ) {
       return;
     }
 
+    if (
+      this.rescheduleBookingId !==
+      null
+    ) {
+      this.rescheduleBooking(
+        slot,
+      );
+      return;
+    }
 
     this.router.navigate(
       [
@@ -474,6 +506,132 @@ export class GymBooking
         },
       },
     );
+
+  }
+
+
+  private rescheduleBooking(
+    slot:
+      GymSlot,
+  ): void {
+
+    const oldBookingId =
+      this.rescheduleBookingId;
+
+    if (
+      oldBookingId ===
+      null
+    ) {
+      return;
+    }
+
+    const token =
+      localStorage.getItem(
+        'pulseos_access_token',
+      );
+
+    if (!token) {
+      this.rescheduleError =
+        'Your session has expired. Please sign in again.';
+
+      this.changeDetectorRef
+        .detectChanges();
+
+      return;
+    }
+
+    this.isRescheduling =
+      true;
+
+    this.rescheduleError =
+      '';
+
+    this.changeDetectorRef
+      .detectChanges();
+
+    // Safe reschedule order:
+    // 1. Create the replacement booking.
+    // 2. Only after creation succeeds, cancel the old booking.
+    this.liftlogApi
+  .createBooking(
+    token,
+    {
+      gym_id:
+        this.gymId,
+
+      slot_id:
+        slot.slot_id,
+
+      date:
+        this.selectedDate,
+    },
+  )
+      .subscribe({
+
+        next: newBooking => {
+
+          this.liftlogApi
+            .cancelBooking(
+              token,
+              oldBookingId,
+            )
+            .subscribe({
+
+              next: () => {
+
+                this.isRescheduling =
+                  false;
+
+                this.router.navigate(
+                  [
+                    '/bookings',
+                    newBooking.booking_id,
+                  ],
+                );
+
+              },
+
+              error: error => {
+
+                console.error(
+                  'Replacement booking was created, but the old booking could not be cancelled:',
+                  error,
+                );
+
+                this.isRescheduling =
+                  false;
+
+                this.rescheduleError =
+                  'Your new session was booked, but the previous booking could not be cancelled. Please review My Bookings before trying again.';
+
+                this.changeDetectorRef
+                  .detectChanges();
+
+              },
+
+            });
+
+        },
+
+        error: error => {
+
+          console.error(
+            'Unable to create replacement booking:',
+            error,
+          );
+
+          this.isRescheduling =
+            false;
+
+          this.rescheduleError =
+            'Could not book the new session. Your existing booking is still active.';
+
+          this.changeDetectorRef
+            .detectChanges();
+
+        },
+
+      });
 
   }
 
@@ -513,6 +671,36 @@ export class GymBooking
 
   }
 
+/* =====================================================
+   GOOGLE MAPS
+===================================================== */
+
+openGymMaps(
+  event: MouseEvent,
+): void {
+
+  event.stopPropagation();
+
+  if (
+    !this.gym ||
+    !this.gym.address
+  ) {
+    return;
+  }
+
+  const mapsUrl =
+    'https://www.google.com/maps/search/?api=1&query=' +
+    encodeURIComponent(
+      this.gym.address,
+    );
+
+  window.open(
+    mapsUrl,
+    '_blank',
+    'noopener,noreferrer',
+  );
+
+}
 
   goBack(): void {
 
@@ -771,6 +959,39 @@ export class GymBooking
     );
 
   }
+  
+
+  private readOptionalPositiveInteger(
+    value:
+      string |
+      null,
+  ):
+    number |
+    null {
+
+    if (
+      value ===
+      null
+    ) {
+      return null;
+    }
+
+    const parsed =
+      Number(
+        value,
+      );
+
+    return (
+      Number.isInteger(
+        parsed,
+      ) &&
+      parsed >
+        0
+    )
+      ? parsed
+      : null;
+
+  }
 
 
   private readOptionalNumber(
@@ -804,5 +1025,6 @@ export class GymBooking
       : null;
 
   }
+  
 
 }

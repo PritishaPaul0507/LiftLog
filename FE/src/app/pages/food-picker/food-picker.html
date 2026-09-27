@@ -61,12 +61,6 @@
           </span>
 
 
-          <!--
-            type="text" intentionally.
-
-            type="search" gives Chrome its own X button,
-            which caused the duplicate clear buttons.
-          -->
           <input
             type="text"
             name="foodSearch"
@@ -246,6 +240,7 @@
                       .nutrition_per_100g
                       .calories
                   }}
+
                   Cal / 100g
 
                 </span>
@@ -294,9 +289,9 @@
         </div>
 
 
-        <!-- ===============================================
+        <!-- =================================================
              PAGINATION
-        ================================================ -->
+        ================================================== -->
 
         <div class="pagination">
 
@@ -428,9 +423,9 @@
         </div>
 
 
-        <!-- ===============================================
+        <!-- =================================================
              MACROS
-        ================================================ -->
+        ================================================== -->
 
         <div class="detail-macros">
 
@@ -513,82 +508,28 @@
 
         </div>
 
-@if (
-  !selectedFood.servings ||
-  selectedFood.servings.length === 0
-) {
 
-  <div class="quantity-selector">
+        <!-- =================================================
+             PREDEFINED SERVINGS
 
-    <div class="quantity-heading">
+             Optional.
 
-      <span>
-        Quantity
-      </span>
+             These remain visible when the food has predefined
+             serving sizes.
 
-      <strong>
-        {{ quantityGrams }}g
-      </strong>
+             The selected appearance is controlled by
+             isServingSelected(serving).
+        ================================================== -->
 
-    </div>
-
-
-    <div class="quantity-controls">
-
-      <button
-        type="button"
-        class="quantity-button"
-        aria-label="Decrease quantity"
-        (click)="decreaseQuantity()"
-      >
-        −
-      </button>
-
-
-      <div class="quantity-input-wrap">
-
-        <input
-          class="quantity-input"
-          type="number"
-          name="quantityGrams"
-          [(ngModel)]="quantityGrams"
-          [min]="minimumQuantity"
-          step="1"
-          inputmode="decimal"
-          (change)="onQuantityChange()"
-        />
-
-        <span>
-          g
-        </span>
-
-      </div>
-
-
-      <button
-        type="button"
-        class="quantity-button"
-        aria-label="Increase quantity"
-        (click)="increaseQuantity()"
-      >
-        +
-      </button>
-
-    </div>
-
-  </div>
-
-}
-       
-
-
-        @else {
+        @if (
+          selectedFood.servings &&
+          selectedFood.servings.length > 0
+        ) {
 
           <div class="serving-list">
 
             @for (
-              serving of
-                selectedFood.servings;
+              serving of selectedFood.servings;
               track serving.serving_id
             ) {
 
@@ -655,6 +596,87 @@
 
         }
 
+
+        <!-- =================================================
+             QUANTITY
+
+             IMPORTANT:
+             This is outside the predefined-serving @if.
+
+             Therefore EVERY food gets:
+                 - quantity +
+        ================================================== -->
+
+        <div class="quantity-selector">
+
+          <div class="quantity-heading">
+
+            <span>
+              Quantity
+            </span>
+
+            <strong>
+              {{ quantityGrams }}g
+            </strong>
+
+          </div>
+
+
+          <div class="quantity-controls">
+
+            <!-- DECREASE -->
+
+            <button
+              type="button"
+              class="quantity-button"
+              aria-label="Decrease quantity"
+              [disabled]="
+                quantityGrams <= minimumQuantity
+              "
+              (click)="decreaseQuantity()"
+            >
+              −
+            </button>
+
+
+            <!-- MANUAL QUANTITY -->
+
+            <div class="quantity-input-wrap">
+
+              <input
+                class="quantity-input"
+                type="number"
+                name="quantityGrams"
+                [(ngModel)]="quantityGrams"
+                [min]="minimumQuantity"
+                step="1"
+                inputmode="decimal"
+                (change)="onQuantityChange()"
+                (blur)="onQuantityChange()"
+              />
+
+              <span>
+                g
+              </span>
+
+            </div>
+
+
+            <!-- INCREASE -->
+
+            <button
+              type="button"
+              class="quantity-button"
+              aria-label="Increase quantity"
+              (click)="increaseQuantity()"
+            >
+              +
+            </button>
+
+          </div>
+
+        </div>
+
       </section>
 
 
@@ -684,36 +706,36 @@
            ADD BUTTON
       ================================================== -->
 
-     <div class="add-food-footer">
+      <div class="add-food-footer">
 
-  <button
-    class="add-food-button"
-    type="button"
-    [disabled]="
-      quantityGrams < minimumQuantity ||
-      isSaving
-    "
-    (click)="addSelectedFood()"
-  >
+        <button
+          class="add-food-button"
+          type="button"
+          [disabled]="
+            quantityGrams < minimumQuantity ||
+            isSaving
+          "
+          (click)="addSelectedFood()"
+        >
 
-    @if (isSaving) {
+          @if (isSaving) {
 
-      Adding...
+            Adding...
 
-    }
+          }
 
-    @else {
+          @else {
 
-      Add
-      {{ quantityGrams }}g
-      to
-      {{ mealName }}
+            Add
+            {{ quantityGrams }}g
+            to
+            {{ mealName }}
 
-    }
+          }
 
-  </button>
+        </button>
 
-</div>
+      </div>
 
     </main>
 

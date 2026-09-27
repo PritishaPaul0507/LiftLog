@@ -24,15 +24,67 @@
         </div>
 
 
-        <div class="date-block">
+        <div class="date-picker-wrap">
 
-          <strong>
-            Today
-          </strong>
+          <button
+            class="date-block date-trigger"
+            type="button"
+            aria-label="Choose nutrition date"
+            [attr.aria-expanded]="showDatePicker"
+            (click)="toggleDatePicker()"
+          >
+            <strong>
+              {{ selectedDateTitle }}
 
-          <span>
-            {{ todayLabel }}
-          </span>
+              <span
+  class="date-chevron"
+  [class.open]="showDatePicker"
+  aria-hidden="true"
+>
+  ⌄
+</span>
+            </strong>
+
+            <span>
+              {{ todayLabel }}
+            </span>
+          </button>
+
+
+          @if (showDatePicker) {
+
+            <div class="nutrition-date-popover">
+
+              <div class="nutrition-date-popover-header">
+
+                <div>
+                  <strong>Choose a date</strong>
+                  <span>Today or an earlier date</span>
+                </div>
+
+                <button
+                  class="date-popover-close"
+                  type="button"
+                  aria-label="Close calendar"
+                  (click)="closeDatePicker()"
+                >
+                  ×
+                </button>
+
+              </div>
+
+
+              <input
+                class="nutrition-date-input"
+                type="date"
+                [max]="todayApiDate"
+                [ngModel]="selectedDate"
+                (ngModelChange)="selectNutritionDate($event)"
+              >
+
+            </div>
+
+          }
 
         </div>
 
@@ -118,24 +170,6 @@
 
         </div>
 
-
-        <button
-          class="set-goal-button"
-          type="button"
-          (click)="openGoalModal()"
-        >
-
-          <span>
-            🎯
-          </span>
-
-          <span>
-            Set Goal
-          </span>
-
-        </button>
-
-
         <div class="calories-left-row">
 
           <div class="calories-left-copy">
@@ -155,9 +189,14 @@
           </div>
 
 
-          <span class="motivation">
-            Small steps. Big results. 🌿
-          </span>
+          <button
+            class="set-goal-button calories-row-goal"
+            type="button"
+            (click)="openGoalModal()"
+          >
+            <span aria-hidden="true">🎯</span>
+            <span>Set Goal</span>
+          </button>
 
         </div>
 

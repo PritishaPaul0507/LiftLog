@@ -19,6 +19,10 @@ import { GymSlot } from './pages/gym-slot/gym-slot';
 import { GymDetails } from './pages/gym-details/gym-details';
 import { BookingDetailPage } from './pages/booking-detail/booking-detail';
 
+import { Appearance } from './pages/appearance/appearance';
+import { HelpSupport } from './pages/help-support/help-support';
+import { ContactUs } from './pages/contact-us/contact-us';
+
 import {
   rootRedirectGuard,
 } from './core/guards/root-redirect-guard';
@@ -134,7 +138,20 @@ export const routes: Routes = [
     path: 'account',
     component: Account,
   },
+  {
+  path: 'appearance',
+  component: Appearance,
+},
 
+{
+  path: 'help-support',
+  component: HelpSupport,
+},
+
+{
+  path: 'contact-us',
+  component: ContactUs,
+},
   /* =====================================================
      DEFAULT
   ===================================================== */

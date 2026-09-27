@@ -1,0 +1,11 @@
+BE/.venv
+FE/node_modules
+.git
+.gitignore
+__pycache__
+*.pyc
+*.pyo
+.DS_Store
+BE/logs
+BE/backend.log
+nohup.out

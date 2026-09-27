@@ -457,6 +457,86 @@ export class AuthService {
   }
 
 
+  isAccessTokenExpired(
+    token: string | null,
+  ): boolean {
+
+    if (
+      !token
+    ) {
+
+      return true;
+
+    }
+
+    try {
+
+      const tokenParts =
+        token.split('.');
+
+      if (
+        tokenParts.length < 2
+      ) {
+
+        return true;
+
+      }
+
+      const payloadSegment =
+        tokenParts[1]
+          .replace(/-/g, '+')
+          .replace(/_/g, '/');
+
+      const paddedSegment =
+        payloadSegment.padEnd(
+          Math.ceil(
+            payloadSegment.length / 4,
+          ) * 4,
+          '=',
+        );
+
+      const base64Decoded =
+        globalThis.atob(
+          paddedSegment,
+        );
+
+      const normalizedPayload =
+        decodeURIComponent(
+          Array.from(
+            base64Decoded,
+            (character) =>
+              `%${`00${character.charCodeAt(0).toString(16)}`.slice(-2)}`,
+          ).join(''),
+        );
+
+      const payload =
+        JSON.parse(
+          normalizedPayload,
+        ) as {
+          exp?: number;
+        };
+
+      if (
+        typeof payload.exp !== 'number'
+      ) {
+
+        return true;
+
+      }
+
+      return Date.now() >=
+        payload.exp * 1000;
+
+    }
+    catch {
+
+      return true;
+
+    }
+
+  }
+
+
   getUserEmail():
     string | null {
 

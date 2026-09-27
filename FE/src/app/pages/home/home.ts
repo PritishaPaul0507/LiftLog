@@ -13,6 +13,10 @@ import {
   NearbyGym,
 } from '../../services/liftlog-api.service';
 
+import {
+  environment,
+} from '../../../environments/environment';
+
 
 type LocationStatus =
   | 'idle'
@@ -49,10 +53,10 @@ export interface HomeNotification {
 export class Home implements OnInit {
 
   private readonly GYM_RADIUS_KM =
-    25;
+    environment.gym.radiusKm;
 
   private readonly GYM_PAGE_SIZE =
-    20;
+    environment.gym.pageSize;
 
 
   locationStatus:
@@ -298,10 +302,12 @@ export class Home implements OnInit {
             false,
 
           timeout:
-            5000,
+            environment.gym
+              .locationTimeoutMs,
 
           maximumAge:
-            600000,
+            environment.gym
+              .locationMaximumAgeMs,
         },
       );
 
@@ -416,7 +422,7 @@ export class Home implements OnInit {
 
   /*
    * Kept for compatibility with the previous Home page.
-   * It now loads gyms inside PulseOS instead of opening Maps.
+   * It now loads gyms inside LiftLog instead of opening Maps.
    */
   findNearbyGyms(): void {
 

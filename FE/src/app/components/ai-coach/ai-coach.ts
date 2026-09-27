@@ -1,4 +1,5 @@
 import {
+  ChangeDetectorRef,
   Component,
   ElementRef,
   OnDestroy,
@@ -26,18 +27,26 @@ import {
   LiftlogApiService,
 } from '../../services/liftlog-api.service';
 
+import {
+  environment,
+} from '../../../environments/environment';
+
 
 interface CoachMessage {
+
   sender:
     | 'user'
     | 'coach';
 
-  text: string;
+  text:
+    string;
+
 }
 
 
 @Component({
-  selector: 'app-ai-coach',
+  selector:
+    'app-ai-coach',
 
   imports: [
     FormsModule,
@@ -59,6 +68,10 @@ export class AiCoach
     ElementRef<HTMLDivElement>;
 
 
+  readonly coachName =
+    environment.aiCoachName;
+
+
   isOpen =
     false;
 
@@ -72,11 +85,20 @@ export class AiCoach
     '';
 
   currentPage =
-    'general';
+    environment.pages.general;
+
 
   messages:
     CoachMessage[] =
     [];
+
+
+  /*
+   * Prevents another initial greeting request
+   * every time the panel is closed/reopened.
+   */
+  private hasInitialized =
+    false;
 
 
   private routerSubscription?:
@@ -89,6 +111,9 @@ export class AiCoach
 
     private readonly liftlogApi:
       LiftlogApiService,
+
+    private readonly changeDetectorRef:
+      ChangeDetectorRef,
   ) {}
 
 
@@ -131,6 +156,10 @@ export class AiCoach
   }
 
 
+  /* =====================================================
+     OPEN / CLOSE
+  ===================================================== */
+
   toggleCoach(): void {
 
     this.isOpen =
@@ -139,19 +168,16 @@ export class AiCoach
 
     if (
       this.isOpen &&
-      this.messages.length ===
-        0
+      !this.hasInitialized
     ) {
 
-      this.messages.push({
-        sender:
-          'coach',
-
-        text:
-          'Hi! I’m your LiftLog AI Coach. How can I help you today?',
-      });
+      this.initializeCoach();
 
     }
+
+
+    this.changeDetectorRef
+      .detectChanges();
 
 
     this.scrollToBottom();
@@ -166,6 +192,190 @@ export class AiCoach
 
   }
 
+
+  /* =====================================================
+     INITIAL MESSAGE FROM BACKEND
+  ===================================================== */
+
+  private initializeCoach(): void {
+
+    const token =
+      localStorage.getItem(
+        'pulseos_access_token',
+      );
+
+
+    if (!token) {
+
+      this.messages.push({
+
+        sender:
+          'coach',
+
+        text:
+          'Your session has expired. Please sign in again.',
+
+      });
+
+
+      this.hasInitialized =
+        true;
+
+
+      this.changeDetectorRef
+        .detectChanges();
+
+      return;
+
+    }
+
+
+    this.isLoading =
+      true;
+
+
+    /*
+     * IMPORTANT:
+     *
+     * The initial coach message comes from the backend.
+     *
+     * page    = current page
+     * context = empty
+     * text    = empty
+     */
+    const request:
+      AiCoachChatRequest = {
+
+        page:
+          this.currentPage,
+
+        context:
+          '',
+
+        text:
+          '',
+
+      };
+
+
+    this.liftlogApi
+      .chatWithCoach(
+        token,
+        request,
+      )
+      .pipe(
+        finalize(
+          () => {
+
+            this.isLoading =
+              false;
+
+
+            this.changeDetectorRef
+              .detectChanges();
+
+
+            this.scrollToBottom();
+
+          },
+        ),
+      )
+      .subscribe({
+
+        next:
+          response => {
+
+            const responseText =
+              response.text?.trim();
+
+
+            if (responseText) {
+
+              this.messages.push({
+
+                sender:
+                  'coach',
+
+                text:
+                  responseText,
+
+              });
+
+            } else {
+
+              this.messages.push({
+
+                sender:
+                  'coach',
+
+                text:
+                  'How can I help you today?',
+
+              });
+
+            }
+
+
+            /*
+             * Initial conversation has now been created.
+             */
+            this.hasInitialized =
+              true;
+
+
+            this.changeDetectorRef
+              .detectChanges();
+
+
+            this.scrollToBottom();
+
+          },
+
+
+        error:
+          error => {
+
+            console.error(
+              'AI Coach initialization failed:',
+              error,
+            );
+
+
+            this.messages.push({
+
+              sender:
+                'coach',
+
+              text:
+                'I’m having trouble connecting right now. Please try again.',
+
+            });
+
+
+            /*
+             * Allow another attempt next time
+             * the coach is opened.
+             */
+            this.hasInitialized =
+              false;
+
+
+            this.changeDetectorRef
+              .detectChanges();
+
+
+            this.scrollToBottom();
+
+          },
+
+      });
+
+  }
+
+
+  /* =====================================================
+     SEND MESSAGE
+  ===================================================== */
 
   sendMessage(): void {
 
@@ -190,12 +400,19 @@ export class AiCoach
     if (!token) {
 
       this.messages.push({
+
         sender:
           'coach',
 
         text:
           'Your session has expired. Please sign in again.',
+
       });
+
+
+      this.changeDetectorRef
+        .detectChanges();
+
 
       this.scrollToBottom();
 
@@ -204,11 +421,25 @@ export class AiCoach
     }
 
 
+    /*
+     * Build context BEFORE adding the current message.
+     *
+     * So:
+     *
+     * context = previous conversation
+     * text    = current typed message
+     */
+    const context =
+      this.buildConversationContext();
+
+
     this.messages.push({
+
       sender:
         'user',
 
       text,
+
     });
 
 
@@ -225,12 +456,15 @@ export class AiCoach
         page:
           this.currentPage,
 
-        context:
-          '',
+        context,
 
         text,
 
       };
+
+
+    this.changeDetectorRef
+      .detectChanges();
 
 
     this.scrollToBottom();
@@ -248,6 +482,11 @@ export class AiCoach
             this.isLoading =
               false;
 
+
+            this.changeDetectorRef
+              .detectChanges();
+
+
             this.scrollToBottom();
 
           },
@@ -258,14 +497,25 @@ export class AiCoach
         next:
           response => {
 
+            const responseText =
+              response.text?.trim();
+
+
             this.messages.push({
+
               sender:
                 'coach',
 
               text:
-                response.text ||
+                responseText ||
                 'I could not generate a response.',
+
             });
+
+
+            this.changeDetectorRef
+              .detectChanges();
+
 
             this.scrollToBottom();
 
@@ -282,12 +532,19 @@ export class AiCoach
 
 
             this.messages.push({
+
               sender:
                 'coach',
 
               text:
                 'I’m having trouble connecting right now. Please try again.',
+
             });
+
+
+            this.changeDetectorRef
+              .detectChanges();
+
 
             this.scrollToBottom();
 
@@ -297,6 +554,69 @@ export class AiCoach
 
   }
 
+
+  /* =====================================================
+     CONTEXT
+  ===================================================== */
+
+  private buildConversationContext(): string {
+
+    const configuredLimit =
+      environment.aiCoach
+        .contextMessageLimit;
+
+
+    const limit =
+      Number.isFinite(
+        configuredLimit,
+      )
+        ? Math.max(
+            0,
+            Math.floor(
+              configuredLimit,
+            ),
+          )
+        : 10;
+
+
+    if (
+      limit ===
+      0
+    ) {
+      return '';
+    }
+
+
+    return this.messages
+      .slice(
+        -limit,
+      )
+      .map(
+        item => {
+
+          const role =
+            item.sender ===
+            'user'
+              ? 'User'
+              : 'Coach';
+
+
+          return (
+            `${role}: ${item.text}`
+          );
+
+        },
+      )
+      .join(
+        '\n',
+      );
+
+  }
+
+
+  /* =====================================================
+     INPUT
+  ===================================================== */
 
   onInputKeydown(
     event:
@@ -318,8 +638,13 @@ export class AiCoach
   }
 
 
+  /* =====================================================
+     ROUTE / PAGE CONTEXT
+  ===================================================== */
+
   private handleRoute(
-    url: string,
+    url:
+      string,
   ): void {
 
     const path =
@@ -357,14 +682,15 @@ export class AiCoach
 
 
   private resolvePageFromUrl(
-    path: string,
+    path:
+      string,
   ): string {
 
     if (
       path ===
       '/home'
     ) {
-      return 'home';
+      return environment.pages.home;
     }
 
 
@@ -372,7 +698,7 @@ export class AiCoach
       path ===
       '/dashboard'
     ) {
-      return 'workouts';
+      return environment.pages.dashboard;
     }
 
 
@@ -380,7 +706,7 @@ export class AiCoach
       path ===
       '/active-workout'
     ) {
-      return 'active_workout';
+      return environment.pages.activeWorkout;
     }
 
 
@@ -388,7 +714,7 @@ export class AiCoach
       path ===
       '/exercise-picker'
     ) {
-      return 'exercise_picker';
+      return environment.pages.exercisePicker;
     }
 
 
@@ -396,7 +722,7 @@ export class AiCoach
       path ===
       '/workout-history'
     ) {
-      return 'workout_history';
+      return environment.pages.workoutHistory;
     }
 
 
@@ -406,7 +732,7 @@ export class AiCoach
           path,
         )
     ) {
-      return 'workout_detail';
+      return environment.pages.workoutDetail;
     }
 
 
@@ -414,7 +740,7 @@ export class AiCoach
       path ===
       '/healthify'
     ) {
-      return 'nutrition';
+      return environment.pages.nutrition;
     }
 
 
@@ -422,7 +748,7 @@ export class AiCoach
       path ===
       '/food-picker'
     ) {
-      return 'food_picker';
+      return environment.pages.foodPicker;
     }
 
 
@@ -430,7 +756,7 @@ export class AiCoach
       path ===
       '/profile'
     ) {
-      return 'profile';
+      return environment.pages.profile;
     }
 
 
@@ -438,7 +764,7 @@ export class AiCoach
       path ===
       '/account'
     ) {
-      return 'account';
+      return environment.pages.account;
     }
 
 
@@ -448,7 +774,7 @@ export class AiCoach
           path,
         )
     ) {
-      return 'gym_details';
+      return environment.pages.gymDetails;
     }
 
 
@@ -458,7 +784,7 @@ export class AiCoach
           path,
         )
     ) {
-      return 'gym_slot';
+      return environment.pages.gymSlot;
     }
 
 
@@ -468,7 +794,7 @@ export class AiCoach
           path,
         )
     ) {
-      return 'gym_booking';
+      return environment.pages.gymBooking;
     }
 
 
@@ -478,7 +804,7 @@ export class AiCoach
           path,
         )
     ) {
-      return 'booking_detail';
+      return environment.pages.bookingDetail;
     }
 
 
@@ -486,7 +812,7 @@ export class AiCoach
       path ===
       '/help-support'
     ) {
-      return 'help_support';
+      return environment.pages.helpSupport;
     }
 
 
@@ -494,14 +820,26 @@ export class AiCoach
       path ===
       '/contact-us'
     ) {
-      return 'contact_us';
+      return environment.pages.contactUs;
     }
 
 
-    return 'general';
+    if (
+      path ===
+      '/appearance'
+    ) {
+      return environment.pages.appearance;
+    }
+
+
+    return environment.pages.general;
 
   }
 
+
+  /* =====================================================
+     SCROLL
+  ===================================================== */
 
   private scrollToBottom(): void {
 

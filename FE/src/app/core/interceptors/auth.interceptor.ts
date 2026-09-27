@@ -80,6 +80,101 @@ export function authInterceptor(
     authService.getAccessToken();
 
 
+  if (
+    accessToken &&
+    authService.isAccessTokenExpired(
+      accessToken,
+    )
+  ) {
+
+    const refreshToken =
+      authService.getRefreshToken();
+
+    if (
+      !refreshToken
+    ) {
+
+      authService.logout();
+
+      router.navigate([
+        '/login',
+      ]);
+
+      return throwError(
+        () => new Error(
+          'No refresh token available',
+        ),
+      );
+
+    }
+
+    return authService
+      .refreshAccessToken()
+      .pipe(
+
+        catchError(
+          (
+            refreshError:
+              HttpErrorResponse,
+          ) => {
+
+            console.error(
+              'Authentication refresh failed before request:',
+              refreshError,
+            );
+
+            if (
+              refreshError.status === 401 ||
+              refreshError.status === 403
+            ) {
+
+              authService.logout();
+
+              router.navigate([
+                '/login',
+              ]);
+
+            }
+
+            return throwError(
+              () => refreshError,
+            );
+
+          },
+        ),
+
+        switchMap(
+          (
+            response,
+          ) => {
+
+            const refreshedToken =
+              response.user.access_token;
+
+            const retriedRequest =
+              request.clone({
+
+                setHeaders: {
+
+                  Authorization:
+                    `Bearer ${refreshedToken}`,
+
+                },
+
+              });
+
+            return next(
+              retriedRequest,
+            );
+
+          },
+        ),
+
+      );
+
+  }
+
+
   const authenticatedRequest =
     accessToken
       ? request.clone({

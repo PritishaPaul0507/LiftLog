@@ -30,6 +30,8 @@ CORS_ORIGINS = [
 SEED_DEMO_DATA = os.getenv("SEED_DEMO_DATA", str(APP_ENV != "production")).strip().lower() in {
     "1", "true", "yes", "on"
 }
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "").strip()
+GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-3.8-flash").strip()
 if APP_ENV == "production":
     SEED_DEMO_DATA = False
 

@@ -8,6 +8,7 @@ from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
 
 from BE.app.api.routes.auth import router as auth_router
+from BE.app.api.routes.ai_coach import router as ai_coach_router
 from BE.app.api.routes.diet import router as diet_router
 from BE.app.api.routes.exercises import router as exercises_router
 from BE.app.api.routes.gyms import router as gyms_router
@@ -79,6 +80,7 @@ app.add_middleware(
 )
 
 app.include_router(auth_router, prefix=API_PREFIX)
+app.include_router(ai_coach_router, prefix=API_PREFIX)
 app.include_router(diet_router, prefix=API_PREFIX)
 app.include_router(exercises_router, prefix=API_PREFIX)
 app.include_router(gyms_router, prefix=API_PREFIX)

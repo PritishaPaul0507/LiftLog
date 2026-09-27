@@ -1,11 +1,39 @@
 import logging
 import sys
-from logging.handlers import TimedRotatingFileHandler
+from datetime import date
 from pathlib import Path
 
 from BE.app.core.config import LOG_LEVEL, LOG_TO_FILE, UVICORN_ACCESS_LOG
 
 LOG_DIR = Path(__file__).resolve().parent.parent / "logs"
+
+
+class DailyFileHandler(logging.FileHandler):
+    def __init__(self, log_dir: Path, encoding: str = "utf-8") -> None:
+        self.log_dir = log_dir
+        self.current_date = date.today()
+        self.baseFilename = str(self._path_for_date(self.current_date).resolve())
+        super().__init__(self.baseFilename, encoding=encoding)
+
+    def _path_for_date(self, log_date: date) -> Path:
+        return self.log_dir / f"liftlog.log.{log_date:%Y-%m-%d}"
+
+    def rollover_if_needed(self, today: date | None = None) -> None:
+        next_date = today or date.today()
+        if next_date == self.current_date:
+            return
+
+        if self.stream:
+            self.stream.flush()
+            self.stream.close()
+
+        self.current_date = next_date
+        self.baseFilename = str(self._path_for_date(next_date).resolve())
+        self.stream = self._open()
+
+    def emit(self, record: logging.LogRecord) -> None:
+        self.rollover_if_needed()
+        super().emit(record)
 
 
 def setup_logging() -> logging.Logger:
@@ -35,13 +63,7 @@ def setup_logging() -> logging.Logger:
 
     if LOG_TO_FILE:
         LOG_DIR.mkdir(parents=True, exist_ok=True)
-        file_handler = TimedRotatingFileHandler(
-            LOG_DIR / "liftlog.log",
-            when="midnight",
-            interval=1,
-            backupCount=14,
-            encoding="utf-8",
-        )
+        file_handler = DailyFileHandler(LOG_DIR)
         file_handler.setLevel(level)
         file_handler.setFormatter(formatter)
         logger.addHandler(file_handler)

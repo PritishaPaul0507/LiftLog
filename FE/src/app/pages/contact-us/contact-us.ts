@@ -80,7 +80,7 @@ export class ContactUs {
 
     const subject =
       encodeURIComponent(
-        `PulseOS Support - ${this.topic}`,
+        `LiftLog Support - ${this.topic}`,
       );
 
 

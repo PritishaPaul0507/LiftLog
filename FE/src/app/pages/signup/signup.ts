@@ -310,7 +310,7 @@ export class Signup {
           if (error.status === 0) {
 
             this.signupError =
-              'Unable to connect to PulseOS. Please make sure the backend is running.';
+              'Unable to connect to LiftLog. Please make sure the backend is running.';
 
             return;
 

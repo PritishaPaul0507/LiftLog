@@ -1587,7 +1587,7 @@ export class Profile
 
   fullName =
 
-    'PulseOS User';
+    'LiftLog User';
 
 
 
@@ -1901,7 +1901,7 @@ export class Profile
 
       ) ||
 
-      'PulseOS User';
+      'LiftLog User';
 
 
 
@@ -3931,7 +3931,7 @@ export class Profile
 
     window.alert(
 
-      'PulseOS',
+      'LiftLog',
 
     );
 

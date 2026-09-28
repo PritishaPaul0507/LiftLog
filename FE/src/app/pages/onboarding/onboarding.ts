@@ -645,7 +645,7 @@ export class Onboarding implements OnDestroy {
           ) {
 
             this.profileError =
-              'Unable to connect to PulseOS. Please make sure the server is running.';
+              'Unable to connect to LiftLog. Please make sure the server is running.';
 
             return;
 
@@ -677,7 +677,7 @@ export class Onboarding implements OnDestroy {
     this.messages.push({
       sender: 'bot',
       text:
-        'Welcome aboard. Your PulseOS journey starts now.',
+        'Welcome aboard. Your LiftLog journey starts now.',
     });
 
 

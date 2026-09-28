@@ -227,7 +227,7 @@ export class Login {
           if (error.status === 0) {
 
             this.loginError =
-              'Unable to connect to PulseOS. Please make sure the server is running.';
+              'Unable to connect to LiftLog. Please make sure the server is running.';
 
             return;
 

@@ -2526,7 +2526,7 @@ private removeSnackAssignment(
       error.status === 0
     ) {
       this.foodSaveError =
-        'Unable to connect to PulseOS.';
+        'Unable to connect to LiftLog.';
 
       this.cdr.detectChanges();
 

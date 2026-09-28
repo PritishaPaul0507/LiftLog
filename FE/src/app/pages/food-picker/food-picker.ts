@@ -11820,7 +11820,7 @@ implements OnInit {
 
 
 
-            'Unable to connect to PulseOS.';
+            'Unable to connect to LiftLog.';
 
 
 

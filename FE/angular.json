@@ -32,18 +32,19 @@
           "configurations": {
             "production": {
               "budgets": [
-                {
-                  "type": "initial",
-                  "maximumWarning": "500kB",
-                  "maximumError": "1MB"
-                },
-                {
-                  "type": "anyComponentStyle",
-                  "maximumWarning": "4kB",
-                  "maximumError": "8kB"
-                }
-              ],
-              "outputHashing": "all"
+  {
+    "type": "initial",
+    "maximumWarning": "2MB",
+    "maximumError": "3MB"
+  },
+  {
+    "type": "anyComponentStyle",
+    "maximumWarning": "25kB",
+    "maximumError": "35kB"
+  }
+],
+              "outputHashing": "all",
+              "serviceWorker": "ngsw-config.json"
             },
             "development": {
               "optimization": false,

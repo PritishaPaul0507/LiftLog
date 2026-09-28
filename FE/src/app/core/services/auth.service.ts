@@ -331,7 +331,7 @@ export class AuthService {
               next: () => {
 
                 console.log(
-                  'PulseOS authentication refreshed.',
+                  'LiftLog authentication refreshed.',
                 );
 
               },

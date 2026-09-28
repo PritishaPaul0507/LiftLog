@@ -1,6 +1,6 @@
 import {
   ApplicationConfig,
-  provideBrowserGlobalErrorListeners,
+  provideBrowserGlobalErrorListeners, isDevMode,
 } from '@angular/core';
 
 import {
@@ -19,6 +19,7 @@ import {
 import {
   authInterceptor,
 } from './core/interceptors/auth.interceptor';
+import { provideServiceWorker } from '@angular/service-worker';
 
 
 export const appConfig: ApplicationConfig = {
@@ -33,7 +34,10 @@ export const appConfig: ApplicationConfig = {
       withInterceptors([
         authInterceptor,
       ]),
-    ),
+    ), provideServiceWorker('ngsw-worker.js', {
+            enabled: !isDevMode(),
+            registrationStrategy: 'registerWhenStable:30000'
+          }),
 
   ],
 

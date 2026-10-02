@@ -9,7 +9,10 @@
     <header class="brand">
 
       <div class="brand-logo">
-        L;
+        <img
+          src="/icons/icon-152x152.png"
+          alt="LiftLog app logo"
+        />
       </div>
 
       <div class="brand-name">
@@ -220,9 +223,10 @@
               <div
                 class="rule"
                 [class.valid-rule]="hasMinimumLength"
+                [class.invalid-rule]="!hasMinimumLength"
               >
                 <span>
-                  {{ hasMinimumLength ? '✓' : '○' }}
+                  {{ hasMinimumLength ? '✓' : '!' }}
                 </span>
 
                 At least 8 characters
@@ -232,9 +236,10 @@
               <div
                 class="rule"
                 [class.valid-rule]="hasUppercase"
+                [class.invalid-rule]="!hasUppercase"
               >
                 <span>
-                  {{ hasUppercase ? '✓' : '○' }}
+                  {{ hasUppercase ? '✓' : '!' }}
                 </span>
 
                 At least 1 uppercase letter
@@ -244,9 +249,10 @@
               <div
                 class="rule"
                 [class.valid-rule]="hasLowercase"
+                [class.invalid-rule]="!hasLowercase"
               >
                 <span>
-                  {{ hasLowercase ? '✓' : '○' }}
+                  {{ hasLowercase ? '✓' : '!' }}
                 </span>
 
                 At least 1 lowercase letter
@@ -256,9 +262,10 @@
               <div
                 class="rule"
                 [class.valid-rule]="hasDigit"
+                [class.invalid-rule]="!hasDigit"
               >
                 <span>
-                  {{ hasDigit ? '✓' : '○' }}
+                  {{ hasDigit ? '✓' : '!' }}
                 </span>
 
                 At least 1 number
@@ -268,9 +275,10 @@
               <div
                 class="rule rule-wide"
                 [class.valid-rule]="hasSpecialCharacter"
+                [class.invalid-rule]="!hasSpecialCharacter"
               >
                 <span>
-                  {{ hasSpecialCharacter ? '✓' : '○' }}
+                  {{ hasSpecialCharacter ? '✓' : '!' }}
                 </span>
 
                 At least 1 special character

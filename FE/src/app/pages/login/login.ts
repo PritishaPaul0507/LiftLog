@@ -1,4 +1,5 @@
 import {
+  ChangeDetectorRef,
   Component,
 } from '@angular/core';
 
@@ -60,6 +61,7 @@ export class Login {
   constructor(
     private router: Router,
     private authService: AuthService,
+    private cdr: ChangeDetectorRef,
   ) {}
 
 
@@ -155,6 +157,8 @@ export class Login {
           this.isLoading =
             false;
 
+          this.cdr.detectChanges();
+
         }),
 
       )
@@ -175,9 +179,9 @@ export class Login {
            * full name
            */
 
-         this.router.navigate([
-  '/home',
-]);
+          this.router.navigate([
+            '/home',
+          ]);
 
         },
 
@@ -209,33 +213,57 @@ export class Login {
             this.loginError =
               'Invalid email or password.';
 
+            this.cdr.detectChanges();
+
             return;
 
           }
 
 
-          if (error.status === 422) {
+          /*
+           * Backend validation error.
+           */
+
+          if (
+            error.status === 422
+          ) {
 
             this.loginError =
               'Please enter a valid email and password.';
 
+            this.cdr.detectChanges();
+
             return;
 
           }
 
 
-          if (error.status === 0) {
+          /*
+           * Backend unavailable / network error.
+           */
+
+          if (
+            error.status === 0
+          ) {
 
             this.loginError =
               'Unable to connect to LiftLog. Please make sure the server is running.';
 
+            this.cdr.detectChanges();
+
             return;
 
           }
 
 
+          /*
+           * Any other unexpected error.
+           */
+
           this.loginError =
             'Something went wrong while signing in. Please try again.';
+
+          this.cdr.detectChanges();
 
         },
 

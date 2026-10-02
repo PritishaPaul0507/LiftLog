@@ -81,17 +81,19 @@ input {
 
   flex-shrink: 0;
 
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
   border-radius: 13px;
 
-  background: #70d9a5;
-  color: #10231d;
+  overflow: hidden;
+}
 
-  font-size: 25px;
-  font-weight: 800;
+
+.brand-logo img {
+  display: block;
+
+  width: 100%;
+  height: 100%;
+
+  object-fit: cover;
 }
 
 .brand-name {
@@ -477,6 +479,22 @@ input {
 .rule.valid-rule span {
   background: #39a867;
   color: #ffffff;
+}
+
+.rule.invalid-rule {
+  color: #d75858;
+
+  font-weight: 650;
+}
+
+
+.rule.invalid-rule span {
+  border: 1.5px solid #d75858;
+
+  background: transparent;
+  color: #d75858;
+
+  font-weight: 800;
 }
 
 .rule-wide {

@@ -236,7 +236,7 @@
           </span>
 
           <span>
-            ✓
+            ACTIONS
           </span>
 
         </div>
@@ -308,20 +308,43 @@
             />
 
 
-            <button
-              class="complete-set-button"
-              type="button"
-              aria-label="Complete set"
-              [class.completed]="set.completed"
-              (click)="
-                toggleSetCompleted(
-                  workoutExercise,
-                  set
-                )
-              "
-            >
-              ✓
-            </button>
+            <div class="set-actions">
+
+              <button
+                class="delete-set-button"
+                type="button"
+                [attr.aria-label]="
+                  'Delete Set ' + (setIndex + 1)
+                "
+                (click)="
+                  removeSet(
+                    exerciseIndex,
+                    setIndex
+                  )
+                "
+              >
+                <span aria-hidden="true">
+                  🗑
+                </span>
+              </button>
+
+
+              <button
+                class="complete-set-button"
+                type="button"
+                aria-label="Complete set"
+                [class.completed]="set.completed"
+                (click)="
+                  toggleSetCompleted(
+                    workoutExercise,
+                    set
+                  )
+                "
+              >
+                ✓
+              </button>
+
+            </div>
 
           </div>
 
@@ -540,6 +563,31 @@
     </div>
 
   </div>
+
+}
+
+
+<!-- ========================================================
+     REMOVE SET CONFIRMATION
+========================================================= -->
+
+@if (showRemoveSetDialog) {
+
+  <app-confirm-dialog
+    icon="🗑️"
+    [title]="'Delete Set ' + pendingRemoveSetNumber + '?'"
+    [message]="
+      'Remove Set ' +
+      pendingRemoveSetNumber +
+      ' from ' +
+      pendingRemoveSetExerciseName +
+      '? The remaining sets will be renumbered automatically.'
+    "
+    confirmText="Delete"
+    cancelText="Cancel"
+    (confirmed)="confirmRemoveSet()"
+    (cancelled)="cancelRemoveSet()"
+  />
 
 }
 

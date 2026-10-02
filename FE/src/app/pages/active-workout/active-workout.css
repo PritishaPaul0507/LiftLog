@@ -511,7 +511,7 @@
     minmax(62px, 1fr)
     minmax(60px, 1fr)
     minmax(60px, 1fr)
-    42px;
+    78px;
 
   gap: 6px;
 
@@ -697,6 +697,53 @@
   background: #74d9a5;
 
   color: #10231d;
+}
+
+
+/* =========================================================
+   SET ACTIONS
+========================================================= */
+
+.set-actions {
+  display: flex;
+
+  align-items: center;
+  justify-content: center;
+
+  gap: 5px;
+}
+
+
+.delete-set-button {
+  display: flex;
+
+  align-items: center;
+  justify-content: center;
+
+  width: 34px;
+  height: 34px;
+
+  padding: 0;
+
+  border:
+    1px solid #f0d9d9;
+
+  border-radius: 9px;
+
+  background: #fff5f5;
+
+  color: #b84b4b;
+
+  font-family:
+    "Apple Color Emoji",
+    "Segoe UI Emoji",
+    sans-serif;
+
+  font-size: 15px;
+
+  line-height: 1;
+
+  cursor: pointer;
 }
 
 
@@ -1201,11 +1248,23 @@
     grid-template-columns:
       30px
       52px
-      1fr
-      1fr
-      36px;
+      minmax(48px, 1fr)
+      minmax(48px, 1fr)
+      70px;
 
     gap: 4px;
+  }
+
+
+  .set-actions {
+    gap: 3px;
+  }
+
+
+  .delete-set-button,
+  .complete-set-button {
+    width: 32px;
+    height: 32px;
   }
 
 
@@ -1272,6 +1331,11 @@
 
   .exercise-delete-button:hover {
     background: #fff1f1;
+  }
+
+
+  .delete-set-button:hover {
+    background: #ffeaea;
   }
 
 

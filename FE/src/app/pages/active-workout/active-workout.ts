@@ -420,6 +420,38 @@ export class ActiveWorkout
 
   /* =====================================================
 
+     REMOVE SET CONFIRMATION
+
+  ===================================================== */
+
+
+
+  showRemoveSetDialog =
+
+    false;
+
+
+
+  pendingRemoveSetExerciseIndex:
+
+    number | null =
+
+    null;
+
+
+
+  pendingRemoveSetIndex:
+
+    number | null =
+
+    null;
+
+
+
+
+
+  /* =====================================================
+
      REMOVE EXERCISE CONFIRMATION
 
   ===================================================== */
@@ -2305,6 +2337,244 @@ export class ActiveWorkout
 
 
     this.saveWorkoutExercises();
+
+
+
+  }
+
+
+
+
+
+  removeSet(
+
+    exerciseIndex: number,
+
+    setIndex: number,
+
+  ): void {
+
+
+
+    const workoutExercise =
+
+      this.workoutExercises[exerciseIndex];
+
+
+
+    if (
+
+      !workoutExercise ||
+
+      setIndex < 0 ||
+
+      setIndex >= workoutExercise.sets.length
+
+    ) {
+
+      return;
+
+    }
+
+
+
+    this.pendingRemoveSetExerciseIndex =
+
+      exerciseIndex;
+
+
+
+    this.pendingRemoveSetIndex =
+
+      setIndex;
+
+
+
+    this.showRemoveSetDialog =
+
+      true;
+
+
+
+  }
+
+
+
+
+
+  cancelRemoveSet(): void {
+
+
+
+    this.showRemoveSetDialog =
+
+      false;
+
+
+
+    this.pendingRemoveSetExerciseIndex =
+
+      null;
+
+
+
+    this.pendingRemoveSetIndex =
+
+      null;
+
+
+
+  }
+
+
+
+
+
+  confirmRemoveSet(): void {
+
+
+
+    const exerciseIndex =
+
+      this.pendingRemoveSetExerciseIndex;
+
+
+
+    const setIndex =
+
+      this.pendingRemoveSetIndex;
+
+
+
+    if (
+
+      exerciseIndex === null ||
+
+      setIndex === null ||
+
+      exerciseIndex < 0 ||
+
+      exerciseIndex >= this.workoutExercises.length
+
+    ) {
+
+      this.cancelRemoveSet();
+
+      return;
+
+    }
+
+
+
+    const workoutExercise =
+
+      this.workoutExercises[exerciseIndex];
+
+
+
+    if (
+
+      setIndex < 0 ||
+
+      setIndex >= workoutExercise.sets.length
+
+    ) {
+
+      this.cancelRemoveSet();
+
+      return;
+
+    }
+
+
+
+    workoutExercise.sets.splice(
+
+      setIndex,
+
+      1,
+
+    );
+
+
+
+    this.saveWorkoutExercises();
+
+
+
+    this.cancelRemoveSet();
+
+
+
+  }
+
+
+
+
+
+  get pendingRemoveSetNumber(): number {
+
+
+
+    if (
+
+      this.pendingRemoveSetIndex === null
+
+    ) {
+
+      return 0;
+
+    }
+
+
+
+    return this.pendingRemoveSetIndex + 1;
+
+
+
+  }
+
+
+
+
+
+  get pendingRemoveSetExerciseName(): string {
+
+
+
+    const exerciseIndex =
+
+      this.pendingRemoveSetExerciseIndex;
+
+
+
+    if (
+
+      exerciseIndex === null ||
+
+      exerciseIndex < 0 ||
+
+      exerciseIndex >= this.workoutExercises.length
+
+    ) {
+
+      return 'this exercise';
+
+    }
+
+
+
+    return (
+
+      this.workoutExercises[exerciseIndex]
+
+        ?.exercise
+
+        ?.n ||
+
+      'this exercise'
+
+    );
 
 
 

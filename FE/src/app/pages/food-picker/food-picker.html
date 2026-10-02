@@ -49,10 +49,7 @@
            SEARCH
       ================================================== -->
 
-      <form
-        class="search-row"
-        (ngSubmit)="searchFoods()"
-      >
+      <div class="search-row live-search-row">
 
         <div class="search-box">
 
@@ -60,15 +57,14 @@
             ⌕
           </span>
 
-
           <input
             type="text"
             name="foodSearch"
-            [(ngModel)]="searchTerm"
-            placeholder="Search foods"
+            [ngModel]="searchTerm"
+            (ngModelChange)="onSearchTermChange($event)"
+            placeholder="Search by Food Name/Dish"
             autocomplete="off"
           />
-
 
           @if (searchTerm) {
 
@@ -85,16 +81,104 @@
 
         </div>
 
+      </div>
 
-        <button
-          class="search-button"
-          type="submit"
-          [disabled]="isLoading"
-        >
-          Search
-        </button>
 
-      </form>
+      <!-- =================================================
+           CUSTOM FOODS
+      ================================================== -->
+
+      <section class="custom-foods-section">
+
+        <div class="custom-foods-heading">
+
+          <div>
+            <span class="section-eyebrow">
+              YOUR FOODS
+            </span>
+
+            <h2>
+              Custom Foods
+            </h2>
+          </div>
+
+          <button
+            class="add-custom-food-button"
+            type="button"
+            (click)="openCustomFoodModal()"
+          >
+            + Add Custom Food
+          </button>
+
+        </div>
+
+        @if (customFoodsLoading) {
+
+          <div class="custom-food-status">
+            Loading your foods...
+          </div>
+
+        }
+
+        @else if (customFoodsError) {
+
+          <div class="custom-food-status error">
+            {{ customFoodsError }}
+          </div>
+
+        }
+
+        @else if (customFoods.length > 0) {
+
+          <div class="custom-food-list">
+
+            @for (
+              food of customFoods;
+              track food.custom_food_id
+            ) {
+
+              <button
+                class="custom-food-row"
+                type="button"
+                (click)="selectCustomFood(food)"
+              >
+
+                <div class="custom-food-avatar">
+                  {{ foodIcon(food.name, food.category) }}
+                </div>
+
+                <div class="custom-food-copy">
+
+                  <strong>
+                    {{ food.name }}
+                  </strong>
+
+                  @if (food.description) {
+                    <span>
+                      {{ food.description }}
+                    </span>
+                  }
+
+                  <small>
+                    {{ food.nutrition_per_100g.calories }}
+                    Cal / 100g
+                  </small>
+
+                </div>
+
+                <div class="custom-food-add">
+                  +
+                </div>
+
+              </button>
+
+            }
+
+          </div>
+
+        }
+
+      </section>
 
 
       <!-- =================================================
@@ -221,8 +305,8 @@
               (click)="selectFood(food)"
             >
 
-              <div class="food-avatar">
-                P
+              <div class="food-avatar emoji-avatar">
+                {{ foodIcon(food.name) }}
               </div>
 
 
@@ -384,8 +468,8 @@
 
         <div class="detail-top">
 
-          <div class="detail-avatar">
-            P
+          <div class="detail-avatar emoji-avatar">
+            {{ foodIcon(selectedFood.name, selectedFood.category) }}
           </div>
 
 
@@ -738,6 +822,164 @@
       </div>
 
     </main>
+
+  }
+
+
+
+  @if (showCustomFoodModal) {
+
+    <div
+      class="custom-food-modal-backdrop"
+      (click)="closeCustomFoodModal()"
+    >
+
+      <section
+        class="custom-food-modal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="customFoodTitle"
+        (click)="$event.stopPropagation()"
+      >
+
+        <div class="custom-food-modal-header">
+
+          <div>
+            <span class="section-eyebrow">
+              YOUR FOOD
+            </span>
+
+            <h2 id="customFoodTitle">
+              Add Custom Food
+            </h2>
+          </div>
+
+          <button
+            class="custom-food-modal-close"
+            type="button"
+            aria-label="Close"
+            (click)="closeCustomFoodModal()"
+          >
+            ×
+          </button>
+
+        </div>
+
+        <div class="custom-food-form">
+
+          <label>
+            <span>Food Name *</span>
+            <input
+              type="text"
+              name="customFoodName"
+              [(ngModel)]="customFoodForm.name"
+              placeholder="e.g. My Brown Rice Mix"
+            />
+          </label>
+
+          <label>
+            <span>Description</span>
+            <textarea
+              name="customFoodDescription"
+              [(ngModel)]="customFoodForm.description"
+              placeholder="e.g. Rice, vegetables, spices"
+              rows="3"
+            ></textarea>
+          </label>
+
+          <label>
+            <span>Category</span>
+            <input
+              type="text"
+              name="customFoodCategory"
+              [(ngModel)]="customFoodForm.category"
+              placeholder="e.g. Rice & Grains"
+            />
+          </label>
+
+          <div class="nutrition-form-heading">
+            Nutrition per 100g
+          </div>
+
+          <div class="nutrition-input-grid">
+
+            <label>
+              <span>Calories *</span>
+              <div class="number-input-wrap">
+                <input type="number" name="customCalories"
+                  [(ngModel)]="customFoodForm.calories"
+                  min="0" inputmode="decimal" />
+                <small>Cal</small>
+              </div>
+            </label>
+
+            <label>
+              <span>Protein</span>
+              <div class="number-input-wrap">
+                <input type="number" name="customProtein"
+                  [(ngModel)]="customFoodForm.protein_g"
+                  min="0" inputmode="decimal" />
+                <small>g</small>
+              </div>
+            </label>
+
+            <label>
+              <span>Carbs</span>
+              <div class="number-input-wrap">
+                <input type="number" name="customCarbs"
+                  [(ngModel)]="customFoodForm.carbs_g"
+                  min="0" inputmode="decimal" />
+                <small>g</small>
+              </div>
+            </label>
+
+            <label>
+              <span>Fat</span>
+              <div class="number-input-wrap">
+                <input type="number" name="customFat"
+                  [(ngModel)]="customFoodForm.fat_g"
+                  min="0" inputmode="decimal" />
+                <small>g</small>
+              </div>
+            </label>
+
+            <label>
+              <span>Fiber</span>
+              <div class="number-input-wrap">
+                <input type="number" name="customFiber"
+                  [(ngModel)]="customFoodForm.fiber_g"
+                  min="0" inputmode="decimal" />
+                <small>g</small>
+              </div>
+            </label>
+
+          </div>
+
+          @if (customFoodError) {
+            <p class="custom-food-form-error">
+              {{ customFoodError }}
+            </p>
+          }
+
+          <button
+            class="create-custom-food-button"
+            type="button"
+            [disabled]="!customFoodForm.name.trim() || isCreatingCustomFood"
+            (click)="createCustomFood()"
+          >
+            @if (isCreatingCustomFood) {
+              Creating...
+            }
+            @else {
+              Create Food
+            }
+          </button>
+
+        </div>
+
+      </section>
+
+    </div>
 
   }
 

@@ -1734,3 +1734,332 @@ button {
   }
 
 }
+
+/* =========================================================
+   TASK 1 â€” LIVE SEARCH + CUSTOM FOODS
+========================================================= */
+
+.live-search-row {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.emoji-avatar {
+  font-family: "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif;
+  font-size: 28px;
+  font-weight: 400;
+}
+
+.custom-foods-section {
+  margin-top: 22px;
+}
+
+.custom-foods-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 0 2px 12px;
+}
+
+.custom-foods-heading h2 {
+  margin: 2px 0 0;
+  color: #10231d;
+  font-size: 19px;
+  font-weight: 900;
+}
+
+.section-eyebrow {
+  display: block;
+  color: #84948d;
+  font-size: 9px;
+  font-weight: 850;
+  letter-spacing: 0.08em;
+}
+
+.add-custom-food-button {
+  min-height: 38px;
+  padding: 0 13px;
+  border: 1px solid #bfe7d6;
+  border-radius: 999px;
+  background: #e9f9f2;
+  color: #087b50;
+  font-size: 12px;
+  font-weight: 850;
+  cursor: pointer;
+}
+
+.custom-food-list {
+  overflow: hidden;
+  border: 1px solid #dce6e1;
+  border-radius: 20px;
+  background: #ffffff;
+}
+
+.custom-food-row {
+  display: grid;
+  grid-template-columns: 48px minmax(0, 1fr) 32px;
+  gap: 12px;
+  align-items: center;
+  width: 100%;
+  min-height: 82px;
+  padding: 12px 14px;
+  border: 0;
+  border-bottom: 1px solid #e6ece9;
+  background: #ffffff;
+  text-align: left;
+  cursor: pointer;
+}
+
+.custom-food-row:last-child {
+  border-bottom: 0;
+}
+
+.custom-food-row:active {
+  background: #f7faf8;
+}
+
+.custom-food-avatar {
+  display: grid;
+  width: 48px;
+  height: 48px;
+  place-items: center;
+  border-radius: 50%;
+  background: #e3f7ee;
+  font-family: "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif;
+  font-size: 24px;
+}
+
+.custom-food-copy {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.custom-food-copy strong {
+  overflow: hidden;
+  color: #10231d;
+  font-size: 15px;
+  font-weight: 900;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.custom-food-copy span,
+.custom-food-copy small {
+  overflow: hidden;
+  color: #83928c;
+  font-size: 11px;
+  font-weight: 650;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.custom-food-copy small {
+  color: #526b61;
+  font-weight: 800;
+}
+
+.custom-food-add {
+  display: grid;
+  width: 30px;
+  height: 30px;
+  place-items: center;
+  border: 1px solid #9fd9c2;
+  border-radius: 9px;
+  color: #087b50;
+  font-size: 22px;
+  font-weight: 700;
+}
+
+.custom-food-status {
+  padding: 16px;
+  border: 1px dashed #d7e3dd;
+  border-radius: 16px;
+  background: #ffffff;
+  color: #72847d;
+  font-size: 12px;
+  font-weight: 700;
+  text-align: center;
+}
+
+.custom-food-status.error {
+  color: #9b3c3c;
+}
+
+
+/* =========================================================
+   ADD CUSTOM FOOD MODAL
+========================================================= */
+
+.custom-food-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding: 14px;
+  background: rgba(16, 35, 29, 0.38);
+}
+
+.custom-food-modal {
+  width: min(100%, 452px);
+  max-height: calc(100dvh - 28px);
+  overflow-y: auto;
+  padding: 20px;
+  border-radius: 28px 28px 22px 22px;
+  background: #ffffff;
+  box-shadow: 0 -12px 40px rgba(16, 35, 29, 0.12);
+}
+
+.custom-food-modal-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.custom-food-modal-header h2 {
+  margin: 3px 0 0;
+  color: #10231d;
+  font-size: 22px;
+  font-weight: 900;
+}
+
+.custom-food-modal-close {
+  display: grid;
+  width: 38px;
+  height: 38px;
+  flex: 0 0 38px;
+  place-items: center;
+  border: 0;
+  border-radius: 50%;
+  background: #f0f4f2;
+  color: #53665e;
+  font-size: 25px;
+  cursor: pointer;
+}
+
+.custom-food-form {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.custom-food-form label {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  color: #20352e;
+  font-size: 12px;
+  font-weight: 850;
+}
+
+.custom-food-form input,
+.custom-food-form textarea {
+  width: 100%;
+  border: 1px solid #d5e1db;
+  border-radius: 14px;
+  outline: 0;
+  background: #ffffff;
+  color: #10231d;
+  font: inherit;
+  font-weight: 650;
+}
+
+.custom-food-form > label > input {
+  min-height: 50px;
+  padding: 0 14px;
+}
+
+.custom-food-form textarea {
+  min-height: 76px;
+  padding: 13px 14px;
+  resize: vertical;
+}
+
+.custom-food-form input:focus,
+.custom-food-form textarea:focus {
+  border-color: #20aa76;
+  box-shadow: 0 0 0 3px rgba(32, 170, 118, 0.08);
+}
+
+.nutrition-form-heading {
+  margin-top: 4px;
+  color: #10231d;
+  font-size: 15px;
+  font-weight: 900;
+}
+
+.nutrition-input-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.number-input-wrap {
+  position: relative;
+}
+
+.number-input-wrap input {
+  height: 52px;
+  padding: 0 38px 0 12px;
+}
+
+.number-input-wrap small {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  color: #899790;
+  font-size: 11px;
+  font-weight: 700;
+  transform: translateY(-50%);
+  pointer-events: none;
+}
+
+.custom-food-form-error {
+  margin: 0;
+  color: #a64040;
+  font-size: 12px;
+  font-weight: 750;
+}
+
+.create-custom-food-button {
+  min-height: 54px;
+  margin-top: 4px;
+  border: 0;
+  border-radius: 16px;
+  background: #0aa568;
+  color: #ffffff;
+  font-size: 15px;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.create-custom-food-button:disabled {
+  opacity: 0.48;
+  cursor: default;
+}
+
+@media (min-width: 700px) {
+  .custom-food-modal-backdrop {
+    align-items: center;
+  }
+
+  .custom-food-modal {
+    border-radius: 28px;
+  }
+}
+
+@media (max-width: 380px) {
+  .custom-foods-heading {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .nutrition-input-grid {
+    grid-template-columns: 1fr;
+  }
+}

@@ -112,6 +112,38 @@ export interface FoodSearchResponse {
 }
 
 
+
+/* =========================================================
+   CUSTOM FOODS
+========================================================= */
+
+export interface CustomFood {
+  custom_food_id: number;
+  name: string;
+  description: string;
+  category: string;
+  nutrition_per_100g: NutritionValues;
+  is_active: boolean;
+}
+
+export interface CustomFoodRequest {
+  name: string;
+  description: string;
+  category: string;
+  nutrition_per_100g: NutritionValues;
+  is_active?: boolean;
+}
+
+export interface CustomFoodResponse {
+  items: CustomFood[];
+  pagination: {
+    page: number;
+    page_size: number;
+    total: number;
+  };
+}
+
+
 /* =========================================================
    FOOD DETAILS
 ========================================================= */
@@ -556,6 +588,74 @@ export class NutritionService {
 
       );
 
+  }
+
+
+
+  /* =====================================================
+     CUSTOM FOODS
+  ===================================================== */
+
+  getCustomFoods(
+    search: string = '',
+    page: number = 1,
+    pageSize: number = 20,
+  ): Observable<CustomFoodResponse> {
+
+    let params =
+      new HttpParams()
+        .set('page', String(page))
+        .set('page_size', String(pageSize));
+
+    const trimmedSearch =
+      search.trim();
+
+    if (trimmedSearch) {
+      params =
+        params.set('search', trimmedSearch);
+    }
+
+    return this.http
+      .get<CustomFoodResponse>(
+        `${this.apiUrl}/custom-foods`,
+        { params },
+      );
+  }
+
+
+  createCustomFood(
+    payload: CustomFoodRequest,
+  ): Observable<CustomFood> {
+
+    return this.http
+      .post<CustomFood>(
+        `${this.apiUrl}/custom-foods`,
+        payload,
+      );
+  }
+
+
+  updateCustomFood(
+    customFoodId: number,
+    payload: Omit<CustomFoodRequest, 'is_active'>,
+  ): Observable<CustomFood> {
+
+    return this.http
+      .patch<CustomFood>(
+        `${this.apiUrl}/custom-foods/${customFoodId}`,
+        payload,
+      );
+  }
+
+
+  deleteCustomFood(
+    customFoodId: number,
+  ): Observable<void> {
+
+    return this.http
+      .delete<void>(
+        `${this.apiUrl}/custom-foods/${customFoodId}`,
+      );
   }
 
 

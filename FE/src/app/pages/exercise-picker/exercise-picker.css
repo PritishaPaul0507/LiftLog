@@ -316,3 +316,19 @@
   box-shadow: 0 12px 28px
     rgba(16, 35, 29, 0.15);
 }
+
+/* =========================================================
+   EXERCISE EMOJI
+========================================================= */
+
+.exercise-avatar.exercise-emoji {
+  font-family:
+    "Apple Color Emoji",
+    "Segoe UI Emoji",
+    "Noto Color Emoji",
+    sans-serif;
+
+  font-size: 25px;
+  font-weight: 400;
+  line-height: 1;
+}

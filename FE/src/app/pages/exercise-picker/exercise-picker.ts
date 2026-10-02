@@ -687,6 +687,144 @@ implements OnInit {
 
 
   /* =====================================================
+     EXERCISE ICON
+  ===================================================== */
+
+  getExerciseEmoji(
+    exercise:
+      ExerciseRecord,
+  ):
+    string {
+
+    const value =
+      [
+        exercise.n,
+        exercise.bp,
+        exercise.tg,
+        exercise.eq,
+      ]
+        .map(item =>
+          this.normalizeText(item),
+        )
+        .join(' ');
+
+    if (
+      value.includes('run') ||
+      value.includes('jog') ||
+      value.includes('treadmill')
+    ) {
+      return '🏃';
+    }
+
+    if (value.includes('walk')) {
+      return '🚶';
+    }
+
+    if (
+      value.includes('cycle') ||
+      value.includes('cycling') ||
+      value.includes('bike') ||
+      value.includes('bicycle')
+    ) {
+      return '🚴';
+    }
+
+    if (value.includes('swim')) {
+      return '🏊';
+    }
+
+    if (
+      value.includes('rower') ||
+      value.includes('rowing machine')
+    ) {
+      return '🚣';
+    }
+
+    if (
+      value.includes('jump rope') ||
+      value.includes('skipping')
+    ) {
+      return '🤸';
+    }
+
+    if (
+      value.includes('leg') ||
+      value.includes('quad') ||
+      value.includes('hamstring') ||
+      value.includes('glute') ||
+      value.includes('calf') ||
+      value.includes('calves') ||
+      value.includes('squat') ||
+      value.includes('lunge')
+    ) {
+      return '🦵';
+    }
+
+    if (
+      value.includes('chest') ||
+      value.includes('pectoral') ||
+      value.includes('bench press') ||
+      value.includes('push up') ||
+      value.includes('push-up')
+    ) {
+      return '🏋️';
+    }
+
+    if (
+      value.includes('back') ||
+      value.includes('lat') ||
+      value.includes('trapezius') ||
+      value.includes('rhomboid') ||
+      value.includes('pull up') ||
+      value.includes('pull-up') ||
+      value.includes('pulldown') ||
+      value.includes('deadlift')
+    ) {
+      return '💪';
+    }
+
+    if (
+      value.includes('shoulder') ||
+      value.includes('deltoid')
+    ) {
+      return '🏋️';
+    }
+
+    if (
+      value.includes('bicep') ||
+      value.includes('tricep') ||
+      value.includes('forearm') ||
+      value.includes('arm') ||
+      value.includes('curl')
+    ) {
+      return '💪';
+    }
+
+    if (
+      value.includes('core') ||
+      value.includes('abdominal') ||
+      value.includes('abs') ||
+      value.includes('oblique') ||
+      value.includes('crunch') ||
+      value.includes('plank')
+    ) {
+      return '🔥';
+    }
+
+    if (
+      value.includes('full body') ||
+      value.includes('full-body') ||
+      value.includes('burpee') ||
+      value.includes('thruster')
+    ) {
+      return '🏋️';
+    }
+
+    return '🏋️';
+  }
+
+
+  /* =====================================================
      SELECTED COUNT
   ===================================================== */
 

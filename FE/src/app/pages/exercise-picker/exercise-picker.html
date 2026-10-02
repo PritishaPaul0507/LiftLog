@@ -144,8 +144,11 @@
           (click)="toggleExercise(exercise)"
         >
 
-          <div class="exercise-avatar">
-            P
+          <div
+            class="exercise-avatar exercise-emoji"
+            aria-hidden="true"
+          >
+            {{ getExerciseEmoji(exercise) }}
           </div>
 
 
